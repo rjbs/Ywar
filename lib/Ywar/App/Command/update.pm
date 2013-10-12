@@ -30,7 +30,8 @@ my $opt;
 
 sub debug { return unless $opt->debug; STDERR->say(@_) }
 
-my $dbh = DBI->connect("dbi:SQLite:life/stats.db", undef, undef)
+my $dsn = Ywar::Config->config->{Ywar}{dsn};
+my $dbh = DBI->connect($dsn, undef, undef)
   or die $DBI::errstr;
 
 sub most_recent_measurement {
