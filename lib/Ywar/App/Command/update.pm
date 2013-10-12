@@ -26,10 +26,6 @@ sub opt_spec {
   );
 }
 
-my $opt;
-
-sub debug { return unless $opt->debug; STDERR->say(@_) }
-
 my $dsn = Ywar::Config->config->{Ywar}{dsn};
 my $dbh = DBI->connect($dsn, undef, undef)
   or die $DBI::errstr;
@@ -43,21 +39,6 @@ sub most_recent_measurement {
     ORDER BY measured_at DESC",
     undef,
     $thing,
-  );
-}
-
-sub save_measurement {
-  my ($thing, $value, $prev) = @_;
-  skip_unless_dayold($prev);
-  if ($opt->dry_run) {
-    warn "dry run: not really setting $thing to $value\n";
-    return;
-  }
-  return $dbh->selectrow_hashref(
-    "INSERT INTO lifestats (thing_measured, measured_at, measured_value)
-    VALUES (?, ?, ?)",
-    undef,
-    $thing, $^T, $value,
   );
 }
 
@@ -84,6 +65,8 @@ sub max { (sort { $b <=> $a } @_)[0] }
 my $ROOT = Ywar::Config->config->{Maildir}{root};
 
 our $OPT;
+
+sub debug { return unless $OPT->debug; STDERR->say(@_) }
 
 sub execute {
   my ($self, $opt, $args) = @_;
@@ -343,6 +326,21 @@ sub complete_goal {
   );
 
   warn "error completing $id: " . $res->status unless $res->is_success;
+}
+
+sub save_measurement {
+  my ($thing, $value, $prev) = @_;
+  skip_unless_dayold($prev);
+  if ($OPT->dry_run) {
+    warn "dry run: not really setting $thing to $value\n";
+    return;
+  }
+  return $dbh->selectrow_hashref(
+    "INSERT INTO lifestats (thing_measured, measured_at, measured_value)
+    VALUES (?, ?, ?)",
+    undef,
+    $thing, $^T, $value,
+  );
 }
 
 1;
