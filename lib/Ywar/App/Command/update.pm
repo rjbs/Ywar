@@ -1,7 +1,7 @@
 use 5.16.0;
 use warnings;
 use utf8;
-package Ywar::App::Command::agenda;
+package Ywar::App::Command::update;
 use lib '/home/rjbs/bin/lib',
         '/home/rjbs/.perlbrew/libs/16.0@std/lib/perl5/';
 
