@@ -105,7 +105,7 @@ sub execute {
 
     skip_unless_known('journal.any', $most_recent);
 
-    my $rubric_dbh = DBI->connect("dbi:SQLite:rubric/rubric.db", undef, undef)
+    my $rubric_dbh = DBI->connect("dbi:SQLite:/home/rjbs/rubric/rubric.db", undef, undef)
       or die $DBI::errstr;
 
     my $last_post = $rubric_dbh->selectrow_hashref(
