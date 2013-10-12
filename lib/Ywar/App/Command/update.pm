@@ -340,3 +340,4 @@ sub complete_goal {
   warn "error completing $id: " . $res->status unless $res->is_success;
 }
 
+1;

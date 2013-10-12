@@ -201,3 +201,5 @@ sub execute {
   # print $email->as_string;
   sendmail($email);
 }
+
+1;
