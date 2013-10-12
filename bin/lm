@@ -1,0 +1,40 @@
+#!/home/rjbs/perl5/perlbrew/perls/16.0/bin/perl
+use 5.16.0;
+use warnings;
+use lib '/home/rjbs/bin/lib',
+        '/home/rjbs/.perlbrew/libs/16.0@std/lib/perl5/';
+
+use Ywar::Maildir -all;
+use Term::ANSIColor;
+use Time::Duration;
+use Ywar::Config;
+
+my $ROOT = Ywar::Config->config->{Maildir}{root};
+
+sub age {
+  color( $_[0] <  900 ? 'bold green'
+       : $_[0] < 3600 ? 'bold yellow'
+       :                  'reset'),
+  concise(duration($_[0], 1)),
+  color('reset'),
+}
+
+my @dirs  = grep { ! /spam\.[0-9]{4}/ } find_maildirs_in($ROOT);
+my $stats = sum_summaries([ map {; summarize_maildir($_, $ROOT) } @dirs ]);
+
+for my $maildir (sort keys %{ $stats->{maildir} }) {
+  my $summary = $stats->{maildir}{$maildir};
+
+  printf "%-30s : %4u : %4u : %s%4s%s : %s%4s%s\n",
+    $summary->{name},
+    $summary->{unread_count},
+    $summary->{flagged_count},
+
+    age($summary->{latest}),
+    age($summary->{oldest}),
+}
+
+(grep {$_} values %$stats)
+  ? (printf "%30s : %4u : %4u\n", 'total',
+      $stats->{unread_count}, $stats->{flagged_count})
+  : (print "no new mail\n");

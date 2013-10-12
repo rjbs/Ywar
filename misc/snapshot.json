@@ -1,0 +1,112 @@
+{
+   "goals" : [
+      {
+         "active" : "1",
+         "category_id" : "1718",
+         "color" : "#21882B",
+         "cooldown" : "5",
+         "description" : "",
+         "foreground" : "#000000",
+         "frequency" : "1",
+         "id" : "333",
+         "name" : "read unread mail",
+         "note_prompt" : null,
+         "position" : "0",
+         "public" : "1",
+         "quantity" : "1",
+         "quantity_needed" : 0,
+         "reminders" : [],
+         "require_note" : "1",
+         "rgb" : [
+            33,
+            136,
+            43
+         ],
+         "start_date" : "2013-08-12T00:00:00",
+         "trend" : [
+            {
+               "cooldown" : "5",
+               "date" : "2013-08-12",
+               "frequency" : "1",
+               "id" : "286653",
+               "needed" : "1",
+               "notes" : [
+                  "new count: 1"
+               ],
+               "quantity" : 5,
+               "streak" : "16"
+            },
+            {
+               "cooldown" : "5",
+               "date" : "2013-08-13",
+               "frequency" : "1",
+               "id" : "287156",
+               "needed" : "1",
+               "notes" : [
+                  "new count: 2"
+               ],
+               "quantity" : 5,
+               "streak" : "17"
+            },
+            {
+               "cooldown" : "5",
+               "date" : "2013-08-14",
+               "frequency" : "1",
+               "id" : "287900",
+               "needed" : "1",
+               "notes" : [
+                  "new count: 5"
+               ],
+               "quantity" : 5,
+               "streak" : "18"
+            },
+            {
+               "cooldown" : "5",
+               "date" : "2013-08-15",
+               "frequency" : "1",
+               "id" : "288523",
+               "needed" : "1",
+               "notes" : [
+                  "new count: 7"
+               ],
+               "quantity" : 5,
+               "streak" : "19"
+            },
+            {
+               "cooldown" : "5",
+               "date" : "2013-08-16",
+               "frequency" : "1",
+               "id" : "289159",
+               "needed" : "1",
+               "notes" : [
+                  "new count: 1"
+               ],
+               "quantity" : 5,
+               "streak" : "20"
+            },
+            {
+               "cooldown" : "5",
+               "date" : "2013-08-17",
+               "frequency" : "1",
+               "id" : "289664",
+               "needed" : "1",
+               "notes" : [
+                  "new count: 8"
+               ],
+               "quantity" : 5,
+               "streak" : "21"
+            },
+            {
+               "date" : "2013-08-18",
+               "quantity" : 4,
+               "streak" : "21"
+            },
+            {
+               "date" : "2013-08-19",
+               "quantity" : 3,
+               "streak" : "21"
+            }
+         ]
+      }
+  ]
+}
