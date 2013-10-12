@@ -2,8 +2,7 @@ use 5.16.0;
 use warnings;
 use utf8;
 package Ywar::App::Command::agenda;
-use lib '/home/rjbs/bin/lib',
-        '/home/rjbs/.perlbrew/libs/16.0@std/lib/perl5/';
+use Ywar::App -command;
 
 use DBI;
 use Date::Parse;
