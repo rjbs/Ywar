@@ -295,7 +295,7 @@ sub execute {
     # number of items 15 days old today should be fewer.
     my %count;
 
-    my @bookmarks = Ywar::Instapaper->bookmarks;
+    my @bookmarks = Ywar::Instapaper->bookmark_list;
 
     my $old_14 = grep { $_->{time} < $^T - 14 * 86_400 } @bookmarks;
     my $old_15 = grep { $_->{time} < $^T - 15 * 86_400 } @bookmarks;
