@@ -82,8 +82,11 @@ sub max { (sort { $b <=> $a } @_)[0] }
 
 my $ROOT = Ywar::Config->config->{Maildir}{root};
 
+our $OPT;
+
 sub execute {
   my ($self, $opt, $args) = @_;
+  local $OPT = $opt; # XXX <- temporary hack
   my @dirs  = grep { ! /spam\.[0-9]{4}/ } find_maildirs_in($ROOT);
   my $stats = sum_summaries([ map {; summarize_maildir($_, $ROOT) } @dirs ]);
 
@@ -234,98 +237,99 @@ sub execute {
     save_measurement('writing.openers', $count, $most_recent);
   }
 
-my $rtm_ua = WebService::RTMAgent->new;
-$rtm_ua->api_key( Ywar::Config->config->{RTM}{api_key} );
-$rtm_ua->api_secret( Ywar::Config->config->{RTM}{api_secret} );
-$rtm_ua->init;
+  my $rtm_ua = WebService::RTMAgent->new;
+  $rtm_ua->api_key( Ywar::Config->config->{RTM}{api_key} );
+  $rtm_ua->api_secret( Ywar::Config->config->{RTM}{api_secret} );
+  $rtm_ua->init;
 
-OVERDUE: {
-  my $res = $rtm_ua->tasks_getList(
-    'filter=status:incomplete AND dueBefore:today'
-  );
-
-  unless ($res) {
-    warn "RTM API error: " . $rtm_ua->error;
-    last OVERDUE;
-  }
-
-  my $count = @{ $res->{tasks}[0]{list} || [] };
-
-  my $most_recent = most_recent_measurement('rtm.overdue');
-
-  skip_unless_known('rtm.overdue', $most_recent);
-
-  if ($count == 0) {
-    complete_goal(47355, "overdue items: $count", $most_recent);
-  }
-
-  save_measurement('rtm.overdue', $count, $most_recent);
-}
-
-RTMPROGRESS: {
-  my $most_recent = most_recent_measurement('rtm.progress');
-  skip_unless_known('rtm.progress', $most_recent);
-
-  my %count;
-
-  for my $age (
-    [ last  => $most_recent->{measured_at} ],
-    [ today => $^T ],
-  ) {
-    my $date = DateTime->from_epoch(epoch => $age->[1])
-                       ->subtract(days => 14)
-                       ->format_cldr("yyyy-MM-dd");
-
-    my $filter = "status:incomplete AND addedBefore:$date"
-               . " AND due:never AND NOT tag:nag";
-
-    my $res = $rtm_ua->tasks_getList("filter=$filter");
+  OVERDUE: {
+    my $res = $rtm_ua->tasks_getList(
+      'filter=status:incomplete AND dueBefore:today'
+    );
 
     unless ($res) {
       warn "RTM API error: " . $rtm_ua->error;
-      last RTMPROGRESS;
+      last OVERDUE;
     }
 
-    my @series = @{ $res->{tasks}[0]{list} || [] };
-    $count{ $age->[0] } = sum0 map {; scalar @{ $_->{taskseries} } } @series;
+    my $count = @{ $res->{tasks}[0]{list} || [] };
+
+    my $most_recent = most_recent_measurement('rtm.overdue');
+
+    skip_unless_known('rtm.overdue', $most_recent);
+
+    if ($count == 0) {
+      complete_goal(47355, "overdue items: $count", $most_recent);
+    }
+
+    save_measurement('rtm.overdue', $count, $most_recent);
   }
 
-  my $last = $most_recent->{measured_value};
+  RTMPROGRESS: {
+    my $most_recent = most_recent_measurement('rtm.progress');
+    skip_unless_known('rtm.progress', $most_recent);
 
-  if ($count{last} == 0 || $count{last} < $last) {
-    my $closed = $last - $count{last};
-    complete_goal(47730, "items closed: $closed", $most_recent);
+    my %count;
+
+    for my $age (
+      [ last  => $most_recent->{measured_at} ],
+      [ today => $^T ],
+    ) {
+      my $date = DateTime->from_epoch(epoch => $age->[1])
+                         ->subtract(days => 14)
+                         ->format_cldr("yyyy-MM-dd");
+
+      my $filter = "status:incomplete AND addedBefore:$date"
+                 . " AND due:never AND NOT tag:nag";
+
+      my $res = $rtm_ua->tasks_getList("filter=$filter");
+
+      unless ($res) {
+        warn "RTM API error: " . $rtm_ua->error;
+        last RTMPROGRESS;
+      }
+
+      my @series = @{ $res->{tasks}[0]{list} || [] };
+      $count{ $age->[0] } = sum0 map {; scalar @{ $_->{taskseries} } } @series;
+    }
+
+    my $last = $most_recent->{measured_value};
+
+    if ($count{last} == 0 || $count{last} < $last) {
+      my $closed = $last - $count{last};
+      complete_goal(47730, "items closed: $closed", $most_recent);
+    }
+
+    save_measurement('rtm.progress', $count{today}, $most_recent);
   }
 
-  save_measurement('rtm.progress', $count{today}, $most_recent);
-}
+  INSTAPROGRESS: {
+    my $most_recent = most_recent_measurement('instapaper.progress');
+    skip_unless_known('instapaper.progress', $most_recent);
 
-INSTAPROGRESS: {
-  my $most_recent = most_recent_measurement('instapaper.progress');
-  skip_unless_known('instapaper.progress', $most_recent);
+    # Recorded is the number of items that were 14 days old yesterday.  The
+    # number of items 15 days old today should be fewer.
+    my %count;
 
-  # Recorded is the number of items that were 14 days old yesterday.  The
-  # number of items 15 days old today should be fewer.
-  my %count;
+    my @bookmarks = Ywar::Instapaper->bookmarks;
 
-  my @bookmarks = Ywar::Instapaper->bookmarks;
+    my $old_14 = grep { $_->{time} < $^T - 14 * 86_400 } @bookmarks;
+    my $old_15 = grep { $_->{time} < $^T - 15 * 86_400 } @bookmarks;
 
-  my $old_14 = grep { $_->{time} < $^T - 14 * 86_400 } @bookmarks;
-  my $old_15 = grep { $_->{time} < $^T - 15 * 86_400 } @bookmarks;
+    my $last = $most_recent->{measured_value};
+    if ($old_15 < $last) {
+      my $closed = $last - $old_15;
+      complete_goal(49692, "items read (or deleted): $closed", $most_recent);
+    }
 
-  my $last = $most_recent->{measured_value};
-  if ($old_15 < $last) {
-    my $closed = $last - $old_15;
-    complete_goal(49692, "items read (or deleted): $closed", $most_recent);
+    save_measurement('instapaper.progress', $old_14, $most_recent);
   }
-
-  save_measurement('instapaper.progress', $old_14, $most_recent);
 }
 
 sub complete_goal {
   my ($id, $note, $prev) = @_;
   skip_unless_dayold($prev);
-  if ($opt->dry_run) {
+  if ($OPT->dry_run) {
     warn "dry run: not completing goal $id ($note)\n";
     return;
   }
