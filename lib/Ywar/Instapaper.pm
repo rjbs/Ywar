@@ -1,5 +1,6 @@
 use 5.16.0;
 use warnings;
+package Ywar::Instapaper;
 
 use JSON;
 use LWP::Authen::OAuth;
