@@ -335,6 +335,7 @@ sub save_measurement {
     warn "dry run: not really setting $thing to $value\n";
     return;
   }
+
   return $dbh->selectrow_hashref(
     "INSERT INTO lifestats (thing_measured, measured_at, measured_value)
     VALUES (?, ?, ?)",
