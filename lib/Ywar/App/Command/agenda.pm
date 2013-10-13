@@ -21,23 +21,31 @@ sub dt {
   DateTimeX::Easy->parse($_[0])->truncate(to => 'day')->set_time_zone('UTC');
 }
 
+sub _rtm_ua {
+  my ($self) = @_;
+  $self->{_rtm_ua} ||= do {
+    my $rtm_ua = WebService::RTMAgent->new;
+    $rtm_ua->api_key( Ywar::Config->config->{RTM}{api_key} );
+    $rtm_ua->api_secret( Ywar::Config->config->{RTM}{api_secret} );
+    $rtm_ua->init;
+    $rtm_ua;
+  }
+}
+
 sub execute {
   my ($self, $opt, $args) = @_;
-
-  my $rtm_ua = WebService::RTMAgent->new;
-  $rtm_ua->api_key( Ywar::Config->config->{RTM}{api_key} );
-  $rtm_ua->api_secret( Ywar::Config->config->{RTM}{api_secret} );
-  $rtm_ua->init;
 
   my $today   = DateTime->today;
   my %for_date;
 
   {
     # GET RTM TASKS TO NAG ABOUT FOR TODAY
-    my $res = $rtm_ua->tasks_getList('filter=status:incomplete AND tag:nag');
+    my $res = $self->_rtm_ua->tasks_getList(
+      'filter=status:incomplete AND tag:nag'
+    );
 
     unless ($res) {
-      die "RTM API error: " . $rtm_ua->error;
+      die "RTM API error: " . $self->_rtm_ua->error;
     }
 
     my @series = @{ $res->{tasks}[0]{list} || [] };
@@ -65,13 +73,13 @@ sub execute {
 
   {
     # GET RTM TASKS THAT HAVE DUE DATES
-    my $rtm_res = $rtm_ua->tasks_getList(
+    my $rtm_res = $self->_rtm_ua->tasks_getList(
       'filter=status:incomplete AND NOT tag:nag '
       . 'AND (dueBefore:today OR dueWithin:"1 month")'
     );
 
     unless ($rtm_res) {
-      die "RTM API error: " . $rtm_ua->error;
+      die "RTM API error: " . $self->_rtm_ua->error;
     }
 
     my @series = @{ $rtm_res->{tasks}[0]{list} || [] };
