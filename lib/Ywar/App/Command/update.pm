@@ -183,7 +183,7 @@ sub execute {
   }
 
   # 335 - do work on RT tickets
-  ISSUES: {
+  CODEREVIEW: {
     my $most_recent = most_recent_measurement('tickets');
 
     skip_unless_known('tickets', $most_recent);
@@ -202,6 +202,19 @@ sub execute {
 
     complete_goal(335, "latest sha: $sha", $most_recent); # could be better
     save_measurement('tickets', $sha, $most_recent);
+  }
+
+  # 49957 - close some github issues
+  ISSUES: {
+    last; # not implemented yet
+    my $most_recent = most_recent_measurement('github.issues');
+
+    skip_unless_known('github.issues', $most_recent);
+
+    # last if $sha eq $most_recent->{measured_value};
+
+    # complete_goal(49957, "latest sha: $sha", $most_recent); # could be better
+    # save_measurement('tickets', $sha, $most_recent);
   }
 
   # 49985 - step on the scale
