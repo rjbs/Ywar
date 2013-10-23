@@ -6,6 +6,7 @@ use Ywar::App -command;
 
 use DateTime;
 use DateTime::Duration;
+use DateTime::Format::ISO8601;
 use DBI;
 use Getopt::Long::Descriptive;
 use JSON ();
@@ -13,6 +14,7 @@ use List::AllUtils 'sum0';
 use LWP::Authen::OAuth;
 use LWP::UserAgent;
 use LWP::Simple qw(get);
+use Pithub;
 use Net::OAuth::Client;
 use Ywar::Maildir -all;
 use WebService::RTMAgent;
@@ -211,10 +213,37 @@ sub execute {
 
     skip_unless_known('github.issues', $most_recent);
 
-    # last if $sha eq $most_recent->{measured_value};
+    my $pithub = Pithub->new(
+      user  => Ywar::Config->config->{GitHub}{user},
+      token => Ywar::Config->config->{GitHub}{token},
+      auto_pagination => 1,
+    );
 
-    # complete_goal(49957, "latest sha: $sha", $most_recent); # could be better
-    # save_measurement('tickets', $sha, $most_recent);
+    my $repos = $pithub->issues->list(params => { filter => 'all' });
+
+    my $owned_14 = 0;
+    my $owned_15 = 0;
+
+    my @issues;
+    while ( my $issue = $repos->next ) {
+      next unless $issue->{repository}{owner}{id} == 30682;
+
+      my $date = DateTime::Format::ISO8601->parse_datetime($issue->{created_at})
+                                          ->epoch;
+
+      my $diff = $^T - $date;
+
+      next if $diff < 14 * 86_400;
+      $owned_14++;
+
+      next if $diff < 15 * 86_400;
+      $owned_15++;
+    }
+
+    if (my $diff = $most_recent->{measured_value} - $owned_15) {
+      complete_goal(49957, "closed: $diff", $most_recent);
+    }
+    save_measurement('github.issues', $owned_14, $most_recent);
   }
 
   # 49985 - step on the scale
