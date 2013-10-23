@@ -13,6 +13,7 @@ use List::AllUtils 'sum0';
 use LWP::Authen::OAuth;
 use LWP::UserAgent;
 use LWP::Simple qw(get);
+use Net::OAuth::Client;
 use Ywar::Maildir -all;
 use WebService::RTMAgent;
 
@@ -201,6 +202,56 @@ sub execute {
 
     complete_goal(335, "latest sha: $sha", $most_recent); # could be better
     save_measurement('tickets', $sha, $most_recent);
+  }
+
+  # 49985 - step on the scale
+  SCALE: {
+    last; # not implemented yet
+    my $most_recent = most_recent_measurement('weight.measured');
+
+    skip_unless_known('weight.measured', $most_recent);
+
+    my $client = Net::OAuth::Client->new(
+      Ywar::Config->config->{Withings}{api_key},
+      Ywar::Config->config->{Withings}{secret},
+      site => 'https://oauth.withings.com/',
+      request_token_path => '/account/request_token',
+      authorize_path => '/account/authorize',
+      access_token_path => '/account/access_token',
+      callback => 'oob',
+    );
+
+    my $userid = Ywar::Config->config->{Withings}{userid};
+
+    my $access_token = Net::OAuth::AccessToken->new(
+      client => $client,
+      token  => Ywar::Config->config->{Withings}{token},
+      token_secret => Ywar::Config->config->{Withings}{tsecret},
+    );
+
+    my $start_o_day = DateTime->today(time_zone => 'America/New_York')
+                    ->epoch;
+
+    my $res = $access_token->get(
+      "http://wbsapi.withings.net/measure"
+      . "?action=getmeas&startdate=$start_o_day&userid=$userid"
+    );
+
+    my $payload = JSON->new->decode($res->decoded_content);
+    my @groups  = @{ $payload->{body}{measuregrps} };
+
+    last unless @groups;
+
+    my $latest = $groups[-1]; # rarely more than one, right?
+    my ($meas) = grep { $_->{type} == 1 } @{ $latest->{measures} };
+
+    unless ($meas) { warn "no weight today!\n"; last }
+
+    my $kg = $meas->{value} * (10 ** $meas->{unit});
+    my $lb = $kg * 2.2046226;
+
+    complete_goal(49985, "weighed in at $lb", $most_recent); # could be better
+    save_measurement('weight.measured', $lb, $most_recent);
   }
 
   # 37752 - write an opening sentence
