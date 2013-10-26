@@ -1,9 +1,10 @@
 use 5.14.0;
 package Ywar::Observer::Instapaper;
+use Moose;
 
 use Ywar::Instapaper;
 
-sub updated_observation {
+sub did_reading {
   my ($self, $prev) = @_;
 
   # Recorded is the number of items that were 14 days old yesterday.  The
