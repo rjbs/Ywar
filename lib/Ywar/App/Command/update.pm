@@ -20,7 +20,6 @@ use Ywar::Maildir -all;
 use WebService::RTMAgent;
 
 use Ywar::Config;
-use Ywar::Instapaper;
 
 sub opt_spec {
   return (
@@ -208,7 +207,6 @@ sub execute {
 
   # 49957 - close some github issues
   ISSUES: {
-    last; # not implemented yet
     my $most_recent = most_recent_measurement('github.issues');
 
     skip_unless_known('github.issues', $most_recent);
@@ -248,7 +246,6 @@ sub execute {
 
   # 49985 - step on the scale
   SCALE: {
-    last; # not implemented yet
     my $most_recent = most_recent_measurement('weight.measured');
 
     skip_unless_known('weight.measured', $most_recent);
@@ -381,25 +378,13 @@ sub execute {
   }
 
   INSTAPROGRESS: {
-    my $most_recent = most_recent_measurement('instapaper.progress');
-    skip_unless_known('instapaper.progress', $most_recent);
+    my $prev = most_recent_measurement('instapaper.progress');
+    skip_unless_known('instapaper.progress', $prev);
+    require Ywar::Observer::Instapaper;
+    my $new = Ywar::Observer::Instapaper->updated_observation($most_recent);
 
-    # Recorded is the number of items that were 14 days old yesterday.  The
-    # number of items 15 days old today should be fewer.
-    my %count;
-
-    my @bookmarks = Ywar::Instapaper->bookmark_list;
-
-    my $old_14 = grep { $_->{time} < $^T - 14 * 86_400 } @bookmarks;
-    my $old_15 = grep { $_->{time} < $^T - 15 * 86_400 } @bookmarks;
-
-    my $last = $most_recent->{measured_value};
-    if ($old_15 < $last) {
-      my $closed = $last - $old_15;
-      complete_goal(49692, "items read (or deleted): $closed", $most_recent);
-    }
-
-    save_measurement('instapaper.progress', $old_14, $most_recent);
+    complete_goal(49692, $new->{note}, $prev) if $note->{met_goal};
+    save_measurement('instapaper.progress', $new->{value}, $prev);
   }
 }
 
