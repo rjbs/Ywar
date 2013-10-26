@@ -27,7 +27,7 @@ sub nothing_overdue {
 
   unless ($res) {
     warn "RTM API error: " . $self->rtm_ua->error;
-    last OVERDUE;
+    return;
   }
 
   my $count = @{ $res->{tasks}[0]{list} || [] };
@@ -59,7 +59,7 @@ sub closed_old_tasks {
 
     unless ($res) {
       warn "RTM API error: " . $self->rtm_ua->error;
-      last RTMPROGRESS;
+      return;
     }
 
     my @series = @{ $res->{tasks}[0]{list} || [] };

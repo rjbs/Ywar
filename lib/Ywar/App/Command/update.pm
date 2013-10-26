@@ -247,51 +247,14 @@ sub execute {
 
   # 49985 - step on the scale
   SCALE: {
-    my $most_recent = most_recent_measurement('weight.measured');
-
-    skip_unless_known('weight.measured', $most_recent);
-
-    my $client = Net::OAuth::Client->new(
-      Ywar::Config->config->{Withings}{api_key},
-      Ywar::Config->config->{Withings}{secret},
-      site => 'https://oauth.withings.com/',
-      request_token_path => '/account/request_token',
-      authorize_path => '/account/authorize',
-      access_token_path => '/account/access_token',
-      callback => 'oob',
-    );
-
-    my $userid = Ywar::Config->config->{Withings}{userid};
-
-    my $access_token = Net::OAuth::AccessToken->new(
-      client => $client,
-      token  => Ywar::Config->config->{Withings}{token},
-      token_secret => Ywar::Config->config->{Withings}{tsecret},
-    );
-
-    my $start_o_day = DateTime->today(time_zone => 'America/New_York')
-                    ->epoch;
-
-    my $res = $access_token->get(
-      "http://wbsapi.withings.net/measure"
-      . "?action=getmeas&startdate=$start_o_day&userid=$userid"
-    );
-
-    my $payload = JSON->new->decode($res->decoded_content);
-    my @groups  = @{ $payload->{body}{measuregrps} };
-
-    last unless @groups;
-
-    my $latest = $groups[-1]; # rarely more than one, right?
-    my ($meas) = grep { $_->{type} == 1 } @{ $latest->{measures} };
-
-    unless ($meas) { warn "no weight today!\n"; last }
-
-    my $kg = $meas->{value} * (10 ** $meas->{unit});
-    my $lb = $kg * 2.2046226;
-
-    complete_goal(49985, "weighed in at $lb", $most_recent); # could be better
-    save_measurement('weight.measured', $lb, $most_recent);
+    require Ywar::Observer::Withings;
+    my $prev = most_recent_measurement('weight.measured');
+    skip_unless_known('weight.measured', $prev);
+    my $new = Ywar::Observer::Withings->measured_weight($prev);
+    debug('weight.measured = no measurement'), last unless $new;
+    debug('weight.measured', $prev, $new);
+    complete_goal(49985, $new->{note}, $prev) if $new->{met_goal};
+    save_measurement('weight.measured', $new->{value}, $prev);
   }
 
   # 37752 - write an opening sentence
@@ -320,6 +283,7 @@ sub execute {
       my $prev = most_recent_measurement('rtm.overdue');
       skip_unless_known('rtm.overdue', $prev);
       my $new = $rtm->nothing_overdue($prev);
+      debug('rtm.overdue'), last unless $new;
       debug('rtm.overdue', $prev, $new);
       complete_goal(47355, $new->{note}, $prev) if $new->{met_goal};
       save_measurement('rtm.overdue', $new->{value}, $prev);
@@ -329,6 +293,7 @@ sub execute {
       my $prev = most_recent_measurement('rtm.progress');
       skip_unless_known('rtm.progress', $prev);
       my $new = $rtm->closed_old_tasks($prev);
+      debug('rtm.progress'), last unless $new;
       debug('rtm.progress', $prev, $new);
       complete_goal(47730, $new->{note}, $prev) if $new->{met_goal};
       save_measurement('rtm.progress', $new->{value}, $prev);
@@ -340,6 +305,7 @@ sub execute {
     skip_unless_known('instapaper.progress', $prev);
     require Ywar::Observer::Instapaper;
     my $new = Ywar::Observer::Instapaper->new->did_reading($prev);
+    debug('instapaper.progress'), last unless $new;
     debug('instapaper.progress', $prev, $new);
     complete_goal(49692, $new->{note}, $prev) if $new->{met_goal};
     save_measurement('instapaper.progress', $new->{value}, $prev);
