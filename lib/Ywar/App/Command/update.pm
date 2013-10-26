@@ -259,20 +259,19 @@ sub execute {
 
   # 37752 - write an opening sentence
   OPENER: {
-    my $most_recent = most_recent_measurement('writing.openers');
+    require Ywar::Observer::Filesystem;
 
-    skip_unless_known('writing.openers', $most_recent);
-
-    my $count = grep { -f $_ } </home/rjbs/Dropbox/writing/openers/*>;
-
-    my $last = $most_recent->{measured_value};
-    warn "fewer openers today ($count) than last time ($last)\n"
-      if $count < $last;
-
-    last if $count == $last;
-
-    complete_goal(37752, "openers written: $count", $most_recent);
-    save_measurement('writing.openers', $count, $most_recent);
+    my $prev = most_recent_measurement('writing.openers');
+    skip_unless_known('writing.openers', $prev);
+    my $new = Ywar::Observer::Filesystem->more_files_in_dir(
+      $prev,
+      '/home/rjbs/Dropbox/writing/openers',
+    );
+    debug('writing.openers'), last unless $new;
+    debug('writing.openers = no measurement'), last unless $new;
+    debug('writing.openers', $prev, $new);
+    complete_goal(37752, $new->{note}, $prev) if $new->{met_goal};
+    save_measurement('writing.openers', $new->{value}, $prev);
   }
 
   {
@@ -283,7 +282,7 @@ sub execute {
       my $prev = most_recent_measurement('rtm.overdue');
       skip_unless_known('rtm.overdue', $prev);
       my $new = $rtm->nothing_overdue($prev);
-      debug('rtm.overdue'), last unless $new;
+      debug('rtm.overdue = no measurement'), last unless $new;
       debug('rtm.overdue', $prev, $new);
       complete_goal(47355, $new->{note}, $prev) if $new->{met_goal};
       save_measurement('rtm.overdue', $new->{value}, $prev);
@@ -293,7 +292,7 @@ sub execute {
       my $prev = most_recent_measurement('rtm.progress');
       skip_unless_known('rtm.progress', $prev);
       my $new = $rtm->closed_old_tasks($prev);
-      debug('rtm.progress'), last unless $new;
+      debug('rtm.progress = no measurement'), last unless $new;
       debug('rtm.progress', $prev, $new);
       complete_goal(47730, $new->{note}, $prev) if $new->{met_goal};
       save_measurement('rtm.progress', $new->{value}, $prev);
@@ -305,7 +304,7 @@ sub execute {
     skip_unless_known('instapaper.progress', $prev);
     require Ywar::Observer::Instapaper;
     my $new = Ywar::Observer::Instapaper->new->did_reading($prev);
-    debug('instapaper.progress'), last unless $new;
+    debug('instapaper.progress = no measurement'), last unless $new;
     debug('instapaper.progress', $prev, $new);
     complete_goal(49692, $new->{note}, $prev) if $new->{met_goal};
     save_measurement('instapaper.progress', $new->{value}, $prev);
