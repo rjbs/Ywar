@@ -208,41 +208,15 @@ sub execute {
 
   # 49957 - close some github issues
   ISSUES: {
-    my $most_recent = most_recent_measurement('github.issues');
-
-    skip_unless_known('github.issues', $most_recent);
-
-    my $pithub = Pithub->new(
-      user  => Ywar::Config->config->{GitHub}{user},
-      token => Ywar::Config->config->{GitHub}{token},
-      auto_pagination => 1,
-    );
-
-    my $repos = $pithub->issues->list(params => { filter => 'all' });
-
-    my $owned_14 = 0;
-    my $owned_15 = 0;
-
-    my @issues;
-    while ( my $issue = $repos->next ) {
-      next unless $issue->{repository}{owner}{id} == 30682;
-
-      my $date = DateTime::Format::ISO8601->parse_datetime($issue->{created_at})
-                                          ->epoch;
-
-      my $diff = $^T - $date;
-
-      next if $diff < 14 * 86_400;
-      $owned_14++;
-
-      next if $diff < 15 * 86_400;
-      $owned_15++;
-    }
-
-    if (my $diff = $most_recent->{measured_value} - $owned_15) {
-      complete_goal(49957, "closed: $diff", $most_recent);
-    }
-    save_measurement('github.issues', $owned_14, $most_recent);
+    require Ywar::Observer::GitHub;
+    my $github = Ywar::Observer::GitHub->new;
+    my $prev = most_recent_measurement('github.issues');
+    skip_unless_known('github.issues', $prev);
+    my $new = $github->closed_issues($prev);
+    debug('github.issues = no measurement'), last unless $new;
+    debug('github.issues', $prev, $new);
+    complete_goal(49957, $new->{note}, $prev) if $new->{met_goal};
+    save_measurement('github.issues', $new->{value}, $prev);
   }
 
   # 49985 - step on the scale
