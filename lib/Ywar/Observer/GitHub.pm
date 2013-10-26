@@ -51,4 +51,21 @@ sub closed_issues {
   return \%result;
 }
 
+sub file_sha_changed {
+  my ($self, $prev, $user, $repo, $path) = @_;
+
+  my $contents = $self->pithub->repos->contents->new(
+    user => $user,
+    repo => $repo,
+  );
+
+  my $new_sha = $contents->get(path => $path)->first->{sha};
+
+  return {
+    note     => "latest sha: $new_sha",
+    value    => $new_sha,
+    met_goal => $new_sha ne $prev->{measured_value} ? 1 : 0,
+  }
+}
+
 1;

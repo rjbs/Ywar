@@ -184,39 +184,34 @@ sub execute {
     save_measurement('p5p.unread', 0, $most_recent);
   }
 
-  # 335 - do work on RT tickets
-  CODEREVIEW: {
-    my $most_recent = most_recent_measurement('tickets');
-
-    skip_unless_known('tickets', $most_recent);
-
-    # https://api.github.com/repos/rjbs/misc/contents/code-review.mkdn
-    # http://developer.github.com/v3/repos/contents/#get-contents
-
-    my $fn = q{code-review.mkdn};
-    last unless my $json = get("https://api.github.com/repos/rjbs/misc/contents/$fn");
-    my $data = JSON->new->decode($json);
-
-    my $sha = $data->{sha};
-    warn("can't figure out sha of $fn"), last unless defined $sha;
-
-    last if $sha eq $most_recent->{measured_value};
-
-    complete_goal(335, "latest sha: $sha", $most_recent); # could be better
-    save_measurement('tickets', $sha, $most_recent);
-  }
-
-  # 49957 - close some github issues
-  ISSUES: {
+  {
     require Ywar::Observer::GitHub;
     my $github = Ywar::Observer::GitHub->new;
-    my $prev = most_recent_measurement('github.issues');
-    skip_unless_known('github.issues', $prev);
-    my $new = $github->closed_issues($prev);
-    debug('github.issues = no measurement'), last unless $new;
-    debug('github.issues', $prev, $new);
-    complete_goal(49957, $new->{note}, $prev) if $new->{met_goal};
-    save_measurement('github.issues', $new->{value}, $prev);
+
+    # 335 - do work on RT tickets
+    CODEREVIEW: {
+      my $prev = most_recent_measurement('tickets');
+      skip_unless_known('tickets', $prev);
+      my $new = $github->file_sha_changed(
+        $prev,
+        rjbs => misc => 'code-review.mkdn'
+      );
+      debug('tickets = no measurement'), last unless $new;
+      debug('tickets', $prev, $new);
+      complete_goal(335, $new->{note}, $prev) if $new->{met_goal};
+      save_measurement('tickets', $new->{value}, $prev);
+    }
+
+    # 49957 - close some github issues
+    ISSUES: {
+      my $prev = most_recent_measurement('github.issues');
+      skip_unless_known('github.issues', $prev);
+      my $new = $github->closed_issues($prev);
+      debug('github.issues = no measurement'), last unless $new;
+      debug('github.issues', $prev, $new);
+      complete_goal(49957, $new->{note}, $prev) if $new->{met_goal};
+      save_measurement('github.issues', $new->{value}, $prev);
+    }
   }
 
   # 49985 - step on the scale
