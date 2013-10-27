@@ -164,112 +164,42 @@ sub execute {
   }
 
   {
-    require Ywar::Observer::GitHub;
-    my $github = Ywar::Observer::GitHub->new;
+    $self->_do_check(
+      37751, 'p5p.perlball',
+      'GitHub', 'branch_sha_changed',
+      [ rjbs => perlball => 'master' ],
+    );
 
-    # 37751 - update perlball
-    PERLBALL: {
-      my $prev = most_recent_measurement('p5p.perlball');
-      skip_unless_known('p5p.perlball', $prev);
-      my $new = $github->branch_sha_changed(
-        $prev,
-        rjbs => perlball => 'master'
-      );
-      debug('p5p.perlball = no measurement'), last unless $new;
-      debug('p5p.perlball', $prev, $new);
-      complete_goal(37751, $new->{note}, $prev) if $new->{met_goal};
-      save_measurement('p5p.perlball', $new->{value}, $prev);
-    }
+    $self->_do_check(
+      335, 'tickets',
+      'GitHub', 'file_sha_changed',
+      [ rjbs => misc => 'code-review.mkdn' ],
+    );
 
-    # 335 - do work on RT tickets
-    CODEREVIEW: {
-      my $prev = most_recent_measurement('tickets');
-      skip_unless_known('tickets', $prev);
-      my $new = $github->file_sha_changed(
-        $prev,
-        rjbs => misc => 'code-review.mkdn'
-      );
-      debug('tickets = no measurement'), last unless $new;
-      debug('tickets', $prev, $new);
-      complete_goal(335, $new->{note}, $prev) if $new->{met_goal};
-      save_measurement('tickets', $new->{value}, $prev);
-    }
-
-    # 49957 - close some github issues
-    ISSUES: {
-      my $prev = most_recent_measurement('github.issues');
-      skip_unless_known('github.issues', $prev);
-      my $new = $github->closed_issues($prev);
-      debug('github.issues = no measurement'), last unless $new;
-      debug('github.issues', $prev, $new);
-      complete_goal(49957, $new->{note}, $prev) if $new->{met_goal};
-      save_measurement('github.issues', $new->{value}, $prev);
-    }
+    $self->_do_check(49957, 'github.issues', 'GitHub', 'closed_issues');
   }
 
   # 49985 - step on the scale
   SCALE: {
-    require Ywar::Observer::Withings;
-    my $prev = most_recent_measurement('weight.measured');
-    skip_unless_known('weight.measured', $prev);
-    my $new = Ywar::Observer::Withings->measured_weight($prev);
-    debug('weight.measured = no measurement'), last unless $new;
-    debug('weight.measured', $prev, $new);
-    complete_goal(49985, $new->{note}, $prev) if $new->{met_goal};
-    save_measurement('weight.measured', $new->{value}, $prev);
+    $self->_do_check(49985, 'weight.measured', 'Withings', 'measured_weight');
   }
 
   # 37752 - write an opening sentence
   OPENER: {
-    require Ywar::Observer::Filesystem;
-
-    my $prev = most_recent_measurement('writing.openers');
-    skip_unless_known('writing.openers', $prev);
-    my $new = Ywar::Observer::Filesystem->more_files_in_dir(
-      $prev,
-      '/home/rjbs/Dropbox/writing/openers',
+    $self->_do_check(
+      37752, 'writing.openers',
+      'Filesystem', 'more_files_in_dir',
+      [ '/home/rjbs/Dropbox/writing/openers' ],
     );
-    debug('writing.openers'), last unless $new;
-    debug('writing.openers = no measurement'), last unless $new;
-    debug('writing.openers', $prev, $new);
-    complete_goal(37752, $new->{note}, $prev) if $new->{met_goal};
-    save_measurement('writing.openers', $new->{value}, $prev);
   }
 
   {
-    require Ywar::Observer::RTM;
-    my $rtm = Ywar::Observer::RTM->new;
-
-    {
-      my $prev = most_recent_measurement('rtm.overdue');
-      skip_unless_known('rtm.overdue', $prev);
-      my $new = $rtm->nothing_overdue($prev);
-      debug('rtm.overdue = no measurement'), last unless $new;
-      debug('rtm.overdue', $prev, $new);
-      complete_goal(47355, $new->{note}, $prev) if $new->{met_goal};
-      save_measurement('rtm.overdue', $new->{value}, $prev);
-    }
-
-    {
-      my $prev = most_recent_measurement('rtm.progress');
-      skip_unless_known('rtm.progress', $prev);
-      my $new = $rtm->closed_old_tasks($prev);
-      debug('rtm.progress = no measurement'), last unless $new;
-      debug('rtm.progress', $prev, $new);
-      complete_goal(47730, $new->{note}, $prev) if $new->{met_goal};
-      save_measurement('rtm.progress', $new->{value}, $prev);
-    }
+    $self->_do_check(47355, 'rtm.overdue', 'RTM', 'nothing_overdue');
+    $self->_do_check(47730, 'rtm.progress', 'RTM', 'closed_old_tasks');
   }
 
   INSTAPROGRESS: {
-    my $prev = most_recent_measurement('instapaper.progress');
-    skip_unless_known('instapaper.progress', $prev);
-    require Ywar::Observer::Instapaper;
-    my $new = Ywar::Observer::Instapaper->new->did_reading($prev);
-    debug('instapaper.progress = no measurement'), last unless $new;
-    debug('instapaper.progress', $prev, $new);
-    complete_goal(49692, $new->{note}, $prev) if $new->{met_goal};
-    save_measurement('instapaper.progress', $new->{value}, $prev);
+    $self->_do_check(49692, 'instapaper.progress', 'Instapaper', 'did_reading');
   }
 }
 
