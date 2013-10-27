@@ -74,6 +74,19 @@ sub debug { return unless $OPT->debug; STDERR->say(flog($_)) for @_ }
 sub execute {
   my ($self, $opt, $args) = @_;
   local $OPT = $opt; # XXX <- temporary hack
+
+  # 334 - write a journal entry
+  JOURNAL: {
+    my $prev = most_recent_measurement('journal.any');
+    skip_unless_known('journal.any', $prev);
+    require Ywar::Observer::Rubric;
+    my $new = Ywar::Observer::Rubric->new->posted_new_entry($prev);
+    debug('journal.any = no measurement'), last unless $new;
+    debug('journal.any', $prev, $new);
+    complete_goal(334, $new->{note}, $prev) if $new->{met_goal};
+    save_measurement('journal.any', $new->{value}, $prev);
+  }
+
   my @dirs  = grep { ! /spam\.[0-9]{4}/ } find_maildirs_in($ROOT);
   my $stats = sum_summaries([ map {; summarize_maildir($_, $ROOT) } @dirs ]);
 
@@ -100,30 +113,6 @@ sub execute {
     }
 
     save_measurement('mail.unread', $stats->{unread_count}, $most_recent);
-  }
-
-  # 334 - write a journal entry
-  JOURNAL: {
-    my $most_recent = most_recent_measurement('journal.any');
-
-    skip_unless_known('journal.any', $most_recent);
-
-    my $rubric_dbh = DBI->connect("dbi:SQLite:/home/rjbs/rubric/rubric.db", undef, undef)
-      or die $DBI::errstr;
-
-    my $last_post = $rubric_dbh->selectrow_hashref(
-      "SELECT title, created
-      FROM entries e
-      JOIN entrytags et ON e.id = et.entry
-      WHERE body IS NOT NULL AND LENGTH(body) > 0 AND tag='journal'
-      ORDER BY e.created DESC
-      LIMIT 1",
-    );
-
-    last unless $last_post && $last_post->{created} > $most_recent->{measured_at};
-
-    complete_goal(334, "latest post: $last_post->{title}", $most_recent);
-    save_measurement('journal.any', $last_post->{created}, $most_recent);
   }
 
   # 325 - review perl.git commits
