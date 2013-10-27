@@ -4,6 +4,7 @@ use utf8;
 package Ywar::App::Command::update;
 use Ywar::App -command;
 
+use Class::Load qw(load_class);
 use DateTime;
 use DateTime::Duration;
 use DateTime::Format::ISO8601;
@@ -71,20 +72,31 @@ our $OPT;
 use String::Flogger 'flog';
 sub debug { return unless $OPT->debug; STDERR->say(flog($_)) for @_ }
 
+sub _do_check {
+  my ($self, $id, $name, $class, $check, $extra) = @_;
+
+  warn("no existing measurements for $name\n"), return
+    unless my $prev = most_recent_measurement($name);
+
+  $class = "Ywar::Observer::$class";
+  state %obs;
+  $obs{$class} ||= do { load_class($class); $class->new; };
+
+  my $new = $obs{$class}->$check($prev, @{ $extra // [] });
+
+  debug("$name = no measurement"), return unless $new;
+  debug("$name", $prev, $new);
+  complete_goal($id, $new->{note}, $prev) if $new->{met_goal};
+  save_measurement("$name", $new->{value}, $prev);
+}
+
 sub execute {
   my ($self, $opt, $args) = @_;
   local $OPT = $opt; # XXX <- temporary hack
 
   # 334 - write a journal entry
   JOURNAL: {
-    my $prev = most_recent_measurement('journal.any');
-    skip_unless_known('journal.any', $prev);
-    require Ywar::Observer::Rubric;
-    my $new = Ywar::Observer::Rubric->new->posted_new_entry($prev);
-    debug('journal.any = no measurement'), last unless $new;
-    debug('journal.any', $prev, $new);
-    complete_goal(334, $new->{note}, $prev) if $new->{met_goal};
-    save_measurement('journal.any', $new->{value}, $prev);
+    $self->_do_check(334, 'journal.any', 'Rubric', 'posted_new_entry');
   }
 
   my @dirs  = grep { ! /spam\.[0-9]{4}/ } find_maildirs_in($ROOT);
