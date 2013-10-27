@@ -45,22 +45,10 @@ sub most_recent_measurement {
   );
 }
 
-sub skip_unless_known {
-  my ($name, $measurement) = @_;
-  no warnings 'exiting';
-
-  unless ($measurement) {
-    warn "can't find any previous measurement for $name\n";
-    last;
-  }
-}
-
-sub skip_unless_dayold {
+sub dayold {
   my ($measurement) = @_;
-  no warnings 'exiting';
-  return if $^T - $measurement->{measured_at} >= 86_000; # 400s grace
-  warn "$measurement->{thing_measured} less than a day old\n";
-  last;
+  return 1 if $^T - $measurement->{measured_at} >= 86_000; # 400s grace
+  return;
 }
 
 sub max { (sort { $b <=> $a } @_)[0] }
@@ -99,68 +87,34 @@ sub execute {
     $self->_do_check(334, 'journal.any', 'Rubric', 'posted_new_entry');
   }
 
-  my @dirs  = grep { ! /spam\.[0-9]{4}/ } find_maildirs_in($ROOT);
-  my $stats = sum_summaries([ map {; summarize_maildir($_, $ROOT) } @dirs ]);
-
   # flagged mail should be less than it was last time, or <10
-  FLAGGED: {
-    my $most_recent = most_recent_measurement('mail.flagged');
-
-    skip_unless_known('mail.flagged', $most_recent);
-
-    if ($stats->{flagged_count} < max($most_recent->{measured_value}, 10)) {
-      complete_goal(45660, "new count: $stats->{flagged_count}", $most_recent);
-    }
-
-    save_measurement('mail.flagged', $stats->{flagged_count}, $most_recent);
+  MAILDIR: {
+    $self->_do_check(
+      45660, 'mail.flagged',
+      'Maildir', 'decreasing_flagged_mail'
+    );
   }
 
-  UNREAD: {
-    my $most_recent = most_recent_measurement('mail.unread');
+  {
+    $self->_do_check(
+      333, 'mail.unread',
+      'Maildir', 'decreasing_unread_mail'
+    );
 
-    skip_unless_known('mail.unread', $most_recent);
+    # 325 - review perl.git commits
+    $self->_do_check(
+      325, 'p5p.changes',
+      'Maildir', 'folder_old_unread',
+      [ { age => 3*86_400, folder => '/INBOX/perl/changes' } ],
+    );
 
-    if ($stats->{unread_count} < max($most_recent->{measured_value}, 25)) {
-      complete_goal(333, "new count: $stats->{unread_count}", $most_recent);
-    }
-
-    save_measurement('mail.unread', $stats->{unread_count}, $most_recent);
-  }
-
-  # 325 - review perl.git commits
-  P5COMMITS: {
-    my $most_recent = most_recent_measurement('p5p.changes');
-    skip_unless_known('p5p.changes', $most_recent);
-
-    my $maildir = $stats->{maildir}{'/INBOX/perl/changes'};
-
-    my @all_unread = grep { $_->{unread} } values %{ $maildir->{messages} };
-    my $old_unread = grep { $_->{age} > 3*86_400 } @all_unread;
-
-    last if $old_unread;
-
-    my $new_unread = @all_unread;
-    complete_goal(325, "waiting to be read: $new_unread", $most_recent);
-    save_measurement('p5p.changes', 0, $most_recent);
-  }
-
-  # 328 - get p5p unread count for mail >2wk old
-  # should be 0 or descending
-  P5P: {
-    my $most_recent = most_recent_measurement('p5p.unread');
-    skip_unless_known('p5p.unread', $most_recent);
-
-    my $maildir = $stats->{maildir}{'/INBOX/perl/p5p'};
-
-    my @all_unread = grep { $_->{unread} } values %{ $maildir->{messages} };
-    my $old_unread = grep { $_->{age} > 14*86_400 } @all_unread;
-    debug("p5p: old unread: $old_unread, measured: $most_recent->{measured_value}");
-
-    last if $old_unread and $old_unread >= $most_recent->{measured_value};
-
-    my $new_unread = @all_unread;
-    complete_goal(328, "waiting to be read: $new_unread", $most_recent);
-    save_measurement('p5p.unread', 0, $most_recent);
+    # 328 - get p5p unread count for mail >2wk old
+    # should be 0 or descending
+    $self->_do_check(
+      328, 'p5p.unread',
+      'Maildir', 'folder_old_unread',
+      [ { age => 14*86_400, folder => '/INBOX/perl/p5p' } ],
+    );
   }
 
   {
@@ -205,7 +159,7 @@ sub execute {
 
 sub complete_goal {
   my ($id, $note, $prev) = @_;
-  skip_unless_dayold($prev);
+  return unless dayold($prev);
   if ($OPT->dry_run) {
     warn "dry run: not completing goal $id ($note)\n";
     return;
@@ -223,7 +177,7 @@ sub complete_goal {
 
 sub save_measurement {
   my ($thing, $value, $prev) = @_;
-  skip_unless_dayold($prev);
+  return unless dayold($prev);
   if ($OPT->dry_run) {
     warn "dry run: not really setting $thing to $value\n";
     return;
