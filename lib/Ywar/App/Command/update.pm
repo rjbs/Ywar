@@ -126,28 +126,6 @@ sub execute {
     save_measurement('journal.any', $last_post->{created}, $most_recent);
   }
 
-  # 37751 - update perlball
-  PERLBALL: {
-    my $most_recent = most_recent_measurement('p5p.perlball');
-
-    skip_unless_known('p5p.perlball', $most_recent);
-
-    # https://api.github.com/repos/rjbs/perlball/branches
-    # http://developer.github.com/v3/repos/#list-branches
-
-    last unless my $json = get('https://api.github.com/repos/rjbs/perlball/branches');
-    my $data = JSON->new->decode($json);
-    last unless my ($master) = grep {; $_->{name} eq 'master' } @$data;
-
-    my $sha = $master->{commit}{sha};
-    warn("can't figure out sha of master"), last unless defined $sha;
-
-    last if $sha eq $most_recent->{measured_value};
-
-    complete_goal(37751, "latest sha: $sha", $most_recent); # could be better
-    save_measurement('p5p.perlball', $sha, $most_recent);
-  }
-
   # 325 - review perl.git commits
   P5COMMITS: {
     my $most_recent = most_recent_measurement('p5p.changes');
@@ -187,6 +165,20 @@ sub execute {
   {
     require Ywar::Observer::GitHub;
     my $github = Ywar::Observer::GitHub->new;
+
+    # 37751 - update perlball
+    PERLBALL: {
+      my $prev = most_recent_measurement('p5p.perlball');
+      skip_unless_known('p5p.perlball', $prev);
+      my $new = $github->branch_sha_changed(
+        $prev,
+        rjbs => perlball => 'master'
+      );
+      debug('p5p.perlball = no measurement'), last unless $new;
+      debug('p5p.perlball', $prev, $new);
+      complete_goal(37751, $new->{note}, $prev) if $new->{met_goal};
+      save_measurement('p5p.perlball', $new->{value}, $prev);
+    }
 
     # 335 - do work on RT tickets
     CODEREVIEW: {

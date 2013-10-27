@@ -68,4 +68,28 @@ sub file_sha_changed {
   }
 }
 
+sub branch_sha_changed {
+  my ($self, $prev, $user, $repo, $branch_name) = @_;
+
+  my $branch_iter = $self->pithub->repos->branches(
+    user => $user,
+    repo => $repo,
+  );
+
+  my $branch = { name => "\0" };
+  $branch = $branch_iter->next
+    until ! defined $branch or $branch->{name} eq $branch_name;
+
+  warn "can't find requested branch: $user/$repo/$branch_name", return
+    unless $branch;
+
+  my $new_sha = $branch->{commit}{sha};
+
+  return {
+    note     => "latest sha: $new_sha",
+    value    => $new_sha,
+    met_goal => $new_sha ne $prev->{measured_value} ? 1 : 0,
+  }
+}
+
 1;
