@@ -74,6 +74,7 @@ sub _do_check {
 
   debug("$name = no measurement"), return unless $new;
   debug("$name", $prev, $new);
+  debug("$name = too recent; not saving"), return unless dayold($prev);
   complete_goal($id, $new->{note}, $prev) if $new->{met_goal};
   save_measurement("$name", $new->{value}, $prev);
 }
@@ -159,7 +160,6 @@ sub execute {
 
 sub complete_goal {
   my ($id, $note, $prev) = @_;
-  return unless dayold($prev);
   if ($OPT->dry_run) {
     warn "dry run: not completing goal $id ($note)\n";
     return;
@@ -177,7 +177,6 @@ sub complete_goal {
 
 sub save_measurement {
   my ($thing, $value, $prev) = @_;
-  return unless dayold($prev);
   if ($OPT->dry_run) {
     warn "dry run: not really setting $thing to $value\n";
     return;
