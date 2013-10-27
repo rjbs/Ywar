@@ -73,7 +73,7 @@ sub _do_check {
   my $new = $obs{$class}->$check($prev, @{ $extra // [] });
 
   debug("$name = no measurement"), return unless $new;
-  debug("$name", $prev, $new);
+  debug([ "$name = %s -> %s", $prev, $new ]);
   debug("$name = too recent; not saving"), return unless dayold($prev);
   complete_goal($id, $new->{note}, $prev) if $new->{met_goal};
   save_measurement("$name", $new->{value}, $prev);
