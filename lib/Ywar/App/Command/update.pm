@@ -51,10 +51,6 @@ sub dayold {
   return;
 }
 
-sub max { (sort { $b <=> $a } @_)[0] }
-
-my $ROOT = Ywar::Config->config->{Maildir}{root};
-
 our $OPT;
 
 use String::Flogger 'flog';
@@ -83,79 +79,50 @@ sub execute {
   my ($self, $opt, $args) = @_;
   local $OPT = $opt; # XXX <- temporary hack
 
-  # 334 - write a journal entry
-  JOURNAL: {
-    $self->_do_check(334, 'journal.any', 'Rubric', 'posted_new_entry');
-  }
+  $self->_do_check(334, 'journal.any', 'Rubric', 'posted_new_entry');
 
-  # flagged mail should be less than it was last time, or <10
-  MAILDIR: {
-    $self->_do_check(
-      45660, 'mail.flagged',
-      'Maildir', 'decreasing_flagged_mail'
-    );
-  }
+  $self->_do_check(45660, 'mail.flagged', 'Maildir', 'decreasing_flagged_mail');
 
-  {
-    $self->_do_check(
-      333, 'mail.unread',
-      'Maildir', 'decreasing_unread_mail'
-    );
+  $self->_do_check( 333, 'mail.unread', 'Maildir', 'decreasing_unread_mail');
 
-    # 325 - review perl.git commits
-    $self->_do_check(
-      325, 'p5p.changes',
-      'Maildir', 'folder_old_unread',
-      [ { age => 3*86_400, folder => '/INBOX/perl/changes' } ],
-    );
+  $self->_do_check(
+    325, 'p5p.changes',
+    'Maildir', 'folder_old_unread',
+    [ { age => 3*86_400, folder => '/INBOX/perl/changes' } ],
+  );
 
-    # 328 - get p5p unread count for mail >2wk old
-    # should be 0 or descending
-    $self->_do_check(
-      328, 'p5p.unread',
-      'Maildir', 'folder_old_unread',
-      [ { age => 14*86_400, folder => '/INBOX/perl/p5p' } ],
-    );
-  }
+  $self->_do_check(
+    328, 'p5p.unread',
+    'Maildir', 'folder_old_unread',
+    [ { age => 14*86_400, folder => '/INBOX/perl/p5p' } ],
+  );
 
-  {
-    $self->_do_check(
-      37751, 'p5p.perlball',
-      'GitHub', 'branch_sha_changed',
-      [ rjbs => perlball => 'master' ],
-    );
+  $self->_do_check(
+    37751, 'p5p.perlball',
+    'GitHub', 'branch_sha_changed',
+    [ rjbs => perlball => 'master' ],
+  );
 
-    $self->_do_check(
-      335, 'tickets',
-      'GitHub', 'file_sha_changed',
-      [ rjbs => misc => 'code-review.mkdn' ],
-    );
+  $self->_do_check(
+    335, 'tickets',
+    'GitHub', 'file_sha_changed',
+    [ rjbs => misc => 'code-review.mkdn' ],
+  );
 
-    $self->_do_check(49957, 'github.issues', 'GitHub', 'closed_issues');
-  }
+  $self->_do_check(49957, 'github.issues', 'GitHub', 'closed_issues');
 
-  # 49985 - step on the scale
-  SCALE: {
-    $self->_do_check(49985, 'weight.measured', 'Withings', 'measured_weight');
-  }
+  $self->_do_check(49985, 'weight.measured', 'Withings', 'measured_weight');
 
-  # 37752 - write an opening sentence
-  OPENER: {
-    $self->_do_check(
-      37752, 'writing.openers',
-      'Filesystem', 'more_files_in_dir',
-      [ '/home/rjbs/Dropbox/writing/openers' ],
-    );
-  }
+  $self->_do_check(
+    37752, 'writing.openers',
+    'Filesystem', 'more_files_in_dir',
+    [ '/home/rjbs/Dropbox/writing/openers' ],
+  );
 
-  {
-    $self->_do_check(47355, 'rtm.overdue', 'RTM', 'nothing_overdue');
-    $self->_do_check(47730, 'rtm.progress', 'RTM', 'closed_old_tasks');
-  }
+  $self->_do_check(47355, 'rtm.overdue', 'RTM', 'nothing_overdue');
+  $self->_do_check(47730, 'rtm.progress', 'RTM', 'closed_old_tasks');
 
-  INSTAPROGRESS: {
-    $self->_do_check(49692, 'instapaper.progress', 'Instapaper', 'did_reading');
-  }
+  $self->_do_check(49692, 'instapaper.progress', 'Instapaper', 'did_reading');
 }
 
 sub complete_goal {
