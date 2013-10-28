@@ -109,6 +109,8 @@ sub execute {
     [ rjbs => misc => 'code-review.mkdn' ],
   );
 
+  $self->_do_check(332, 'rss.unread', 'Feedbin', 'did_reading');
+
   $self->_do_check(49957, 'github.issues', 'GitHub', 'closed_issues');
 
   $self->_do_check(49985, 'weight.measured', 'Withings', 'measured_weight');
