@@ -125,6 +125,8 @@ sub execute {
   $self->_do_check(47730, 'rtm.progress', 'RTM', 'closed_old_tasks');
 
   $self->_do_check(49692, 'instapaper.progress', 'Instapaper', 'did_reading');
+
+  $self->_do_check(49984, 'runkeeper.workout', 'RunKeeper', 'worked_out');
 }
 
 sub complete_goal {
