@@ -79,6 +79,8 @@ sub execute {
   my ($self, $opt, $args) = @_;
   local $OPT = $opt; # XXX <- temporary hack
 
+  # TODO: turn config into plan first, so we can detect duplicates and barf
+  # before doing anything stupid -- rjbs, 2013-11-02
   for my $plugin (@{Ywar::Config->config->{plugins}}) {
     for my $check_name (keys %{$plugin->{checks}}) {
       my $v = $plugin->{checks}{$check_name};
