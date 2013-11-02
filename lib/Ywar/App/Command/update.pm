@@ -87,7 +87,7 @@ sub execute {
       $self->_do_check(
         $v->{'tdp-id'}, $check_name,
         $plugin->{plugin}, $check->{method},
-        [$check->{args}],
+        $check->{args},
       );
     }
   }

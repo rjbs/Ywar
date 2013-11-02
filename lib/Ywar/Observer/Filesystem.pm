@@ -3,7 +3,8 @@ package Ywar::Observer::Filesystem;
 use Moose;
 
 sub more_files_in_dir {
-  my ($self, $prev, $dir) = @_;
+  my ($self, $prev, $arg) = @_;
+  my $dir = $arg->{dir};
 
   my $count = grep {; -f $_ } <$dir/*>;
 

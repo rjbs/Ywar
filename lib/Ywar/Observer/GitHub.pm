@@ -52,7 +52,8 @@ sub closed_issues {
 }
 
 sub file_sha_changed {
-  my ($self, $prev, $user, $repo, $path) = @_;
+  my ($self, $prev, $arg) = @_;
+  my ($user, $repo, $path) = @$arg{ qw(user repo path) };
 
   my $contents = $self->pithub->repos->contents->new(
     user => $user,
@@ -69,7 +70,8 @@ sub file_sha_changed {
 }
 
 sub branch_sha_changed {
-  my ($self, $prev, $user, $repo, $branch_name) = @_;
+  my ($self, $prev, $arg) = @_;
+  my ($user, $repo, $branch_name) = @$arg{ qw(user repo branch) };
 
   my $branch_iter = $self->pithub->repos->branches(
     user => $user,
