@@ -4,6 +4,11 @@ use Moose;
 
 use Ywar::Instapaper;
 
+has [ qw( consumer_key consumer_secret oauth_token oauth_token_secret ) ] => (
+  is => 'ro',
+  required => 1,
+);
+
 sub did_reading {
   my ($self, $prev) = @_;
 
@@ -11,7 +16,8 @@ sub did_reading {
   # number of items 15 days old today should be fewer.
   my %count;
 
-  my @bookmarks = Ywar::Instapaper->bookmark_list;
+  # stupid passing of $self is a temporary situation -- rjbs, 2013-11-04
+  my @bookmarks = Ywar::Instapaper->bookmark_list($self);
 
   my $old_14 = grep { $_->{time} < $^T - 14 * 86_400 } @bookmarks;
   my $old_15 = grep { $_->{time} < $^T - 15 * 86_400 } @bookmarks;

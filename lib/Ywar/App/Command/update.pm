@@ -29,7 +29,7 @@ sub opt_spec {
   );
 }
 
-my $dsn = Ywar::Config->config->{Ywar}{dsn};
+my $dsn = Ywar::Config->config->{dsn};
 my $dbh = DBI->connect($dsn, undef, undef)
   or die $DBI::errstr;
 
@@ -57,16 +57,12 @@ use String::Flogger 'flog';
 sub debug { return unless $OPT->debug; STDERR->say(flog($_)) for @_ }
 
 sub _do_check {
-  my ($self, $id, $name, $class, $check, $extra) = @_;
+  my ($self, $id, $name, $obs, $check, $extra) = @_;
 
   warn("no existing measurements for $name\n"), return
     unless my $prev = most_recent_measurement($name);
 
-  $class = "Ywar::Observer::$class";
-  state %obs;
-  $obs{$class} ||= do { load_class($class); $class->new; };
-
-  my $new = $obs{$class}->$check($prev, @{ $extra // [] });
+  my $new = $obs->$check($prev, $extra // {});
 
   debug("$name = no measurement"), return unless $new;
   debug([ "$name = %s -> %s", $prev, $new ]);
@@ -81,14 +77,20 @@ sub execute {
 
   # TODO: turn config into plan first, so we can detect duplicates and barf
   # before doing anything stupid -- rjbs, 2013-11-02
-  for my $plugin (@{Ywar::Config->config->{plugins}}) {
-    for my $check_name (keys %{$plugin->{checks}}) {
-      my $v = $plugin->{checks}{$check_name};
+  my $observers = Ywar::Config->config->{observers};
+  for my $moniker (sort keys %$observers) {
+    my $hunk   = $observers->{ $moniker };
+    my $config = $hunk->{config};
 
-      my $check = $plugin->{checks}{$check_name};
+    my $class = "Ywar::Observer::$moniker";
+    my $obs   = do { load_class($class); $class->new($config // {}); };
+
+    for my $check_name (keys %{$hunk->{checks}}) {
+      my $check = $hunk->{checks}{$check_name};
+
       $self->_do_check(
-        $v->{'tdp-id'}, $check_name,
-        $plugin->{plugin}, $check->{method},
+        $check->{'tdp-id'}, $check_name,
+        $obs, $check->{method},
         $check->{args},
       );
     }

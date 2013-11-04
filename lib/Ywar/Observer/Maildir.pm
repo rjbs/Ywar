@@ -6,12 +6,15 @@ use Ywar::Maildir -all;
 
 sub max { (sort { $b <=> $a } @_)[0] }
 
+has root => (is => 'ro', required => 1);
+
 has stats => (
   is   => 'ro',
   isa  => 'HashRef',
   lazy => 1,
   default => sub {
-    my $ROOT = Ywar::Config->config->{Maildir}{root};
+    my ($self) = @_;
+    my $ROOT = $self->root;
     my @dirs  = grep { ! /spam\.[0-9]{4}/ } find_maildirs_in($ROOT);
     my $stats = sum_summaries([ map {; summarize_maildir($_, $ROOT) } @dirs ]);
   },

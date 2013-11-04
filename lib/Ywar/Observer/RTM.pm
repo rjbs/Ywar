@@ -5,14 +5,17 @@ use Moose;
 use List::Util qw(sum0);
 use WebService::RTMAgent;
 
+has [ qw(api_key api_secret) ] => (is => 'ro', required => 1);
+
 has rtm_ua => (
   is   => 'ro',
   isa  => 'WebService::RTMAgent',
   lazy => 1,
   default => sub {
+    my ($self) = @_;
     my $rtm_ua = WebService::RTMAgent->new;
-    $rtm_ua->api_key( Ywar::Config->config->{RTM}{api_key} );
-    $rtm_ua->api_secret( Ywar::Config->config->{RTM}{api_secret} );
+    $rtm_ua->api_key( $self->api_key );
+    $rtm_ua->api_secret( $self->api_secret );
     $rtm_ua->init;
     return $rtm_ua;
   },
