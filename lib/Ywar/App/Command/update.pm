@@ -78,9 +78,10 @@ sub execute {
   # TODO: turn config into plan first, so we can detect duplicates and barf
   # before doing anything stupid -- rjbs, 2013-11-02
   my $observers = Ywar::Config->config->{observers};
-  for my $moniker (sort keys %$observers) {
-    my $hunk   = $observers->{ $moniker };
-    my $config = $hunk->{config};
+  for my $plugin_name (sort keys %$observers) {
+    my $hunk    = $observers->{ $plugin_name };
+    my $moniker = $hunk->{class} // $plugin_name; # do RewritePrefix
+    my $config  = $hunk->{config};
 
     my $class = "Ywar::Observer::$moniker";
     my $obs   = do { load_class($class); $class->new($config // {}); };
