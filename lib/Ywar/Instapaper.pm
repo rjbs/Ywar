@@ -4,16 +4,16 @@ package Ywar::Instapaper;
 
 use JSON;
 use LWP::Authen::OAuth;
-use Ywar::Config;
 
 sub bookmark_list {
-  my $c_key     = Ywar::Config->config->{Instapaper}{consumer_key};
-  my $c_secret  = Ywar::Config->config->{Instapaper}{consumer_secret};
+  my ($self, $configger) = @_;
+  my $c_key     = $configger->consumer_key;
+  my $c_secret  = $configger->consumer_secret;
 
   my $ua = LWP::Authen::OAuth->new(
-   oauth_consumer_secret => $c_secret,
-   oauth_token           => Ywar::Config->config->{Instapaper}{oauth_token},
-   oauth_token_secret    => Ywar::Config->config->{Instapaper}{oauth_token_secret},
+    oauth_consumer_secret => $c_secret,
+    oauth_token           => $configger->oauth_token,
+    oauth_token_secret    => $configger->oauth_token_secret,
   );
 
   my $r = $ua->post(

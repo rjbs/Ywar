@@ -4,12 +4,14 @@ use Moose;
 
 use WebService::RTMAgent;
 
+has [ qw(api_key secret token tsecret userid) ] => (is => 'ro', required => 1);
+
 sub measured_weight {
   my ($self, $prev) = @_;
 
   my $client = Net::OAuth::Client->new(
-    Ywar::Config->config->{Withings}{api_key},
-    Ywar::Config->config->{Withings}{secret},
+    $self->api_key,
+    $self->secret,
     site => 'https://oauth.withings.com/',
     request_token_path => '/account/request_token',
     authorize_path => '/account/authorize',
@@ -17,12 +19,12 @@ sub measured_weight {
     callback => 'oob',
   );
 
-  my $userid = Ywar::Config->config->{Withings}{userid};
+  my $userid = $self->userid;
 
   my $access_token = Net::OAuth::AccessToken->new(
     client => $client,
-    token  => Ywar::Config->config->{Withings}{token},
-    token_secret => Ywar::Config->config->{Withings}{tsecret},
+    token  => $self->token,
+    token_secret => $self->tsecret,
   );
 
   my $start_o_day = DateTime->today(time_zone => 'America/New_York')

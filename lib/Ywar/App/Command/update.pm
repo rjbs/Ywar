@@ -29,7 +29,7 @@ sub opt_spec {
   );
 }
 
-my $dsn = Ywar::Config->config->{Ywar}{dsn};
+my $dsn = Ywar::Config->config->{dsn};
 my $dbh = DBI->connect($dsn, undef, undef)
   or die $DBI::errstr;
 
@@ -57,16 +57,12 @@ use String::Flogger 'flog';
 sub debug { return unless $OPT->debug; STDERR->say(flog($_)) for @_ }
 
 sub _do_check {
-  my ($self, $id, $name, $class, $check, $extra) = @_;
+  my ($self, $id, $name, $obs, $check, $extra) = @_;
 
   warn("no existing measurements for $name\n"), return
     unless my $prev = most_recent_measurement($name);
 
-  $class = "Ywar::Observer::$class";
-  state %obs;
-  $obs{$class} ||= do { load_class($class); $class->new; };
-
-  my $new = $obs{$class}->$check($prev, @{ $extra // [] });
+  my $new = $obs->$check($prev, $extra // {});
 
   debug("$name = no measurement"), return unless $new;
   debug([ "$name = %s -> %s", $prev, $new ]);
@@ -79,54 +75,27 @@ sub execute {
   my ($self, $opt, $args) = @_;
   local $OPT = $opt; # XXX <- temporary hack
 
-  $self->_do_check(334, 'journal.any', 'Rubric', 'posted_new_entry');
+  # TODO: turn config into plan first, so we can detect duplicates and barf
+  # before doing anything stupid -- rjbs, 2013-11-02
+  my $observers = Ywar::Config->config->{observers};
+  for my $plugin_name (sort keys %$observers) {
+    my $hunk    = $observers->{ $plugin_name };
+    my $moniker = $hunk->{class} // $plugin_name; # do RewritePrefix
+    my $config  = $hunk->{config};
 
-  $self->_do_check(45660, 'mail.flagged', 'Maildir', 'decreasing_flagged_mail');
+    my $class = "Ywar::Observer::$moniker";
+    my $obs   = do { load_class($class); $class->new($config // {}); };
 
-  $self->_do_check( 333, 'mail.unread', 'Maildir', 'decreasing_unread_mail');
+    for my $check_name (keys %{$hunk->{checks}}) {
+      my $check = $hunk->{checks}{$check_name};
 
-  $self->_do_check(
-    325, 'p5p.changes',
-    'Maildir', 'folder_old_unread',
-    [ { age => 3*86_400, folder => '/INBOX/perl/changes' } ],
-  );
-
-  $self->_do_check(
-    328, 'p5p.unread',
-    'Maildir', 'folder_old_unread',
-    [ { age => 14*86_400, folder => '/INBOX/perl/p5p' } ],
-  );
-
-  $self->_do_check(
-    37751, 'p5p.perlball',
-    'GitHub', 'branch_sha_changed',
-    [ rjbs => perlball => 'master' ],
-  );
-
-  $self->_do_check(
-    335, 'tickets',
-    'GitHub', 'file_sha_changed',
-    [ rjbs => misc => 'code-review.mkdn' ],
-  );
-
-  $self->_do_check(332, 'rss.unread', 'Feedbin', 'did_reading');
-
-  $self->_do_check(49957, 'github.issues', 'GitHub', 'closed_issues');
-
-  $self->_do_check(49985, 'weight.measured', 'Withings', 'measured_weight');
-
-  $self->_do_check(
-    37752, 'writing.openers',
-    'Filesystem', 'more_files_in_dir',
-    [ '/home/rjbs/Dropbox/writing/openers' ],
-  );
-
-  $self->_do_check(47355, 'rtm.overdue', 'RTM', 'nothing_overdue');
-  $self->_do_check(47730, 'rtm.progress', 'RTM', 'closed_old_tasks');
-
-  $self->_do_check(49692, 'instapaper.progress', 'Instapaper', 'did_reading');
-
-  $self->_do_check(49984, 'runkeeper.workout', 'RunKeeper', 'worked_out');
+      $self->_do_check(
+        $check->{'tdp-id'}, $check_name,
+        $obs, $check->{method},
+        $check->{args},
+      );
+    }
+  }
 }
 
 sub complete_goal {

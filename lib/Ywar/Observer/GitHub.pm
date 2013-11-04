@@ -9,13 +9,18 @@ has pithub => (
   isa  => 'Pithub',
   lazy => 1,
   default => sub {
+    my ($self) = @_;
     Pithub->new(
-      user  => Ywar::Config->config->{GitHub}{user},
-      token => Ywar::Config->config->{GitHub}{token},
+      user  => $self->user,
+      token => $self->token,
       auto_pagination => 1,
     );
   },
 );
+
+has user   => (is => 'ro', required => 1);
+has userid => (is => 'ro', required => 1);
+has token  => (is => 'ro', required => 1);
 
 sub closed_issues {
   my ($self, $prev) = @_;
@@ -27,8 +32,7 @@ sub closed_issues {
 
   my @issues;
   while ( my $issue = $repos->next ) {
-    next unless $issue->{repository}{owner}{id}
-                == Ywar::Config->config->{GitHub}{userid};
+    next unless $issue->{repository}{owner}{id} == $self->userid;
 
     my $date = DateTime::Format::ISO8601->parse_datetime($issue->{created_at})
                                         ->epoch;
@@ -52,7 +56,8 @@ sub closed_issues {
 }
 
 sub file_sha_changed {
-  my ($self, $prev, $user, $repo, $path) = @_;
+  my ($self, $prev, $arg) = @_;
+  my ($user, $repo, $path) = @$arg{ qw(user repo path) };
 
   my $contents = $self->pithub->repos->contents->new(
     user => $user,
@@ -69,7 +74,8 @@ sub file_sha_changed {
 }
 
 sub branch_sha_changed {
-  my ($self, $prev, $user, $repo, $branch_name) = @_;
+  my ($self, $prev, $arg) = @_;
+  my ($user, $repo, $branch_name) = @$arg{ qw(user repo branch) };
 
   my $branch_iter = $self->pithub->repos->branches(
     user => $user,

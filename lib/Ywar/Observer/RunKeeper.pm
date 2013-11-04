@@ -7,6 +7,8 @@ use JSON;
 use LWP::UserAgent;
 use Time::Duration;
 
+has token => (is => 'ro', required => 1);
+
 sub worked_out {
   my ($self, $prev) = @_;
 
@@ -14,7 +16,7 @@ sub worked_out {
   my $ua   = LWP::UserAgent->new(keep_alive => 1);
   my $JSON = JSON->new;
 
-  my $token = Ywar::Config->config->{RunKeeper}{token};
+  my $token = $self->token;
 
   my $uri = "https://api.runkeeper.com/fitnessActivities";
   my $res = $ua->get($uri, 'Authorization' => "Bearer $token");

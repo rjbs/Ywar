@@ -6,6 +6,8 @@ use DateTime::Format::ISO8601;
 use JSON 2;
 use LWP::UserAgent;
 
+has auth => (is => 'ro', required => 1);
+
 sub did_reading {
   my ($self, $prev) = @_;
 
@@ -14,7 +16,7 @@ sub did_reading {
   my $ua   = LWP::UserAgent->new(keep_alive => 1);
   my $JSON = JSON->new;
 
-  my $auth = Ywar::Config->config->{Feedbin}{auth};
+  my $auth = $self->auth;
 
   my $per_page = 50;
   my $page_num = 1;
