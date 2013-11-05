@@ -25,8 +25,9 @@ sub _rtm_ua {
   my ($self) = @_;
   $self->{_rtm_ua} ||= do {
     my $rtm_ua = WebService::RTMAgent->new;
-    $rtm_ua->api_key( Ywar::Config->config->{RTM}{api_key} );
-    $rtm_ua->api_secret( Ywar::Config->config->{RTM}{api_secret} );
+    my $config = Ywar::Config->config->{observers}{RTM}{config};
+    $rtm_ua->api_key( $config->{api_key} );
+    $rtm_ua->api_secret( $config->{api_secret} );
     $rtm_ua->init;
     $rtm_ua;
   }
@@ -193,8 +194,8 @@ sub execute {
   my $email = Email::MIME->create(
     header_str => [
       Subject => "Ywar: daily agenda for " . $today->ymd,
-      From    => Ywar::Config->config->{'Ywar::Agenda'}{hdr_from},
-      To      => Ywar::Config->config->{'Ywar::Agenda'}{hdr_to},
+      From    => Ywar::Config->config->{agenda}{hdr_from},
+      To      => Ywar::Config->config->{agenda}{hdr_to},
     ],
     attributes => {
       content_type => 'text/plain',
