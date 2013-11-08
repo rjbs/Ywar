@@ -51,9 +51,7 @@ sub folder_old_unread {
   my $folder = $arg->{folder};
   my $age    = $arg->{age};
 
-  my $maildir = $self->stats->{maildir}{ $folder };
-
-  warn("no data for folder $folder"), return unless $maildir;
+  my $maildir = $self->stats->{maildir}{ $folder } || {};
 
   my @all_unread = grep { $_->{unread} } values %{ $maildir->{messages} };
   my $old_unread = grep { $_->{age} > $age } @all_unread;
