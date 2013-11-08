@@ -17,6 +17,7 @@ use LWP::UserAgent;
 use LWP::Simple qw(get);
 use Pithub;
 use Net::OAuth::Client;
+use Try::Tiny;
 use Ywar::Maildir -all;
 use WebService::RTMAgent;
 
@@ -62,7 +63,13 @@ sub _do_check {
   warn("no existing measurements for $name\n"), return
     unless my $prev = most_recent_measurement($name);
 
-  my $new = $obs->$check($prev, $extra // {});
+  my $new;
+
+  try {
+    $new = $obs->$check($prev, $extra // {});
+  } catch {
+    warn "error while checking $name: $_";
+  };
 
   debug("$name = no measurement"), return unless $new;
   debug([ "$name = %s -> %s", $prev, $new ]);
