@@ -119,7 +119,7 @@ sub complete_goal {
     'X-Access-Token' => Ywar::Config->config->{TDP}{token},
   );
 
-  warn "error completing $id: " . $res->status unless $res->is_success;
+  warn "error completing $id: " . $res->as_string unless $res->is_success;
 }
 
 sub save_measurement {
