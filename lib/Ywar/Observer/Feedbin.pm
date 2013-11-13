@@ -43,7 +43,7 @@ sub did_reading {
     return @$data;
   };
 
-  my $nonrecent;
+  my $nonrecent = 0;
   while (my @entries = $next_page->()) {
     for my $e (@entries) {
       my $date = DateTime::Format::ISO8601->parse_datetime($e->{published});
