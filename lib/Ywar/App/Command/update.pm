@@ -82,6 +82,8 @@ sub execute {
   my ($self, $opt, $args) = @_;
   local $OPT = $opt; # XXX <- temporary hack
 
+  my %to_check = map {; $_ => 1 } @$args;
+
   # TODO: turn config into plan first, so we can detect duplicates and barf
   # before doing anything stupid -- rjbs, 2013-11-02
   my $observers = Ywar::Config->config->{observers};
@@ -94,6 +96,8 @@ sub execute {
     my $obs   = do { load_class($class); $class->new($config // {}); };
 
     for my $check_name (keys %{$hunk->{checks}}) {
+      next if keys %to_check && ! $to_check{$check_name};
+
       my $check = $hunk->{checks}{$check_name};
 
       $self->_do_check(
