@@ -56,8 +56,8 @@ sub did_reading {
   return {
     # We only get enough pages to answer the question atm, so we do not have
     # all the stats we suggest in this note: -- rjbs, 2013-10-28
-    # note  => sprintf("%s unread items, %s older", 0+@entries, $nonrecent),
-    value => $nonrecent,
+    note  => sprintf("at least %s old unread items", $nonrecent),
+    value    => $nonrecent,
     met_goal => $nonrecent <= 10 ? 1 : 0,
   };
 }
