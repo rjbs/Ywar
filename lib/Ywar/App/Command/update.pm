@@ -46,9 +46,22 @@ sub most_recent_measurement {
   );
 }
 
-sub dayold {
-  my ($measurement) = @_;
-  return 1 if $^T - $measurement->{measured_at} >= 86_000; # 400s grace
+sub interval_long_enough {
+  my ($prev, $freq) = @_;
+  return 1 unless $prev; # If we never did it before, time to start!
+
+  if ($freq eq '24h') {
+    # could do something ridiculous like allow any [0-9]+ followed by [hmdw]
+    # but for now will just hardcode the old default of 24h -- rjbs, 2013-12-02
+    return 1 if $^T - $measurement->{measured_at} >= 86_000; # 400s grace
+  } elsif ($freq eq 'once-a-day') {
+    my $then = DateTime->from_epoch(time_zone => 'local',
+                                    epoch     => $prev->{measured_at});
+    my $now  = DateTime->from_epoch(time_zone => 'local', epoch => $^T);
+    return unless $now->ymd gt $then->ymd;
+  }
+
+  warn "unknown check interval: $freq";
   return;
 }
 
@@ -58,7 +71,7 @@ use String::Flogger 'flog';
 sub debug { return unless $OPT->debug; STDERR->say(flog($_)) for @_ }
 
 sub _do_check {
-  my ($self, $id, $name, $obs, $check, $extra) = @_;
+  my ($self, $id, $name, $obs, $check, $extra, $freq) = @_;
 
   warn("no existing measurements for $name\n"), return
     unless my $prev = most_recent_measurement($name);
@@ -73,7 +86,8 @@ sub _do_check {
 
   debug("$name = no measurement"), return unless $new;
   debug([ "$name = %s -> %s", $prev, $new ]);
-  debug("$name = too recent; not saving"), return unless dayold($prev);
+  debug("$name = too recent; not saving"), return
+    unless interval_long_enough($freq, $prev);
   complete_goal($id, $new->{note}, $prev) if $new->{met_goal};
   save_measurement("$name", $new->{value}, $prev);
 }
@@ -101,9 +115,12 @@ sub execute {
       my $check = $hunk->{checks}{$check_name};
 
       $self->_do_check(
-        $check->{'tdp-id'}, $check_name,
-        $obs, $check->{method},
+        $check->{'tdp-id'},
+        $check_name,
+        $obs,
+        $check->{method},
         $check->{args},
+        $check->{freq} // 'once-a-day',
       );
     }
   }
