@@ -6,20 +6,11 @@ use Ywar::App -command;
 
 use Class::Load qw(load_class);
 use DateTime;
-use DateTime::Duration;
-use DateTime::Format::ISO8601;
 use DBI;
 use Getopt::Long::Descriptive;
 use JSON ();
-use List::AllUtils 'sum0';
-use LWP::Authen::OAuth;
 use LWP::UserAgent;
-use LWP::Simple qw(get);
-use Pithub;
-use Net::OAuth::Client;
 use Try::Tiny;
-use Ywar::Maildir -all;
-use WebService::RTMAgent;
 
 use Ywar::Config;
 
