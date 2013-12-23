@@ -119,6 +119,7 @@ sub execute {
 
     for my $goal (sort { $a->{name} cmp $b->{name} } @{ $data->{goals} }) {
       next unless $goal->{active};
+      next if grep {; $_->{name} eq 'noagenda' } @{ $goal->{tags} };
 
       unless ($today_idx) {
         ($today_idx) = grep { $goal->{trend}[$_]{today} }
