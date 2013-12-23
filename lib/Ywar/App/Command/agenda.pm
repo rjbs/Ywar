@@ -16,9 +16,11 @@ use LWP::UserAgent;
 use POSIX qw(ceil);
 use WebService::RTMAgent;
 use YAML::XS ();
+use Ywar::Config;
 
+my $TZ = Ywar::Config->config->{TZ} // 'America/New_York';
 sub dt {
-  DateTimeX::Easy->parse($_[0])->truncate(to => 'day')->set_time_zone('UTC');
+  DateTimeX::Easy->parse($_[0])->truncate(to => 'day')->set_time_zone($TZ);
 }
 
 sub _rtm_ua {
@@ -36,7 +38,7 @@ sub _rtm_ua {
 sub execute {
   my ($self, $opt, $args) = @_;
 
-  my $today   = DateTime->today;
+  my $today   = DateTime->today(time_zone => $TZ);
   my %for_date;
 
   {
