@@ -2,7 +2,7 @@ use 5.14.0;
 package Ywar::Observer::Withings;
 use Moose;
 
-use WebService::RTMAgent;
+use Net::OAuth::Client;
 
 has [ qw(api_key secret token tsecret userid) ] => (is => 'ro', required => 1);
 
