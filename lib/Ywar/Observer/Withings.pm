@@ -12,11 +12,11 @@ sub measured_weight {
   my $client = Net::OAuth::Client->new(
     $self->api_key,
     $self->secret,
-    site => 'https://oauth.withings.com/',
+    site               => 'https://oauth.withings.com/',
     request_token_path => '/account/request_token',
-    authorize_path => '/account/authorize',
-    access_token_path => '/account/access_token',
-    callback => 'oob',
+    authorize_path     => '/account/authorize',
+    access_token_path  => '/account/access_token',
+    callback           => 'oob',
   );
 
   my $userid = $self->userid;
