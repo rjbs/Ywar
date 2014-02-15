@@ -7,7 +7,7 @@ use Net::OAuth::Client;
 has [ qw(api_key secret token tsecret userid) ] => (is => 'ro', required => 1);
 
 sub measured_weight {
-  my ($self, $prev) = @_;
+  my ($self, $laststate) = @_;
 
   my $client = Net::OAuth::Client->new(
     $self->api_key,

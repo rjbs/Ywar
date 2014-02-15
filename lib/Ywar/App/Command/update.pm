@@ -13,6 +13,7 @@ use LWP::UserAgent;
 use Try::Tiny;
 
 use Ywar::Config;
+use Ywar::LastState;
 
 sub opt_spec {
   return (
@@ -25,7 +26,7 @@ my $dsn = Ywar::Config->config->{dsn};
 my $dbh = DBI->connect($dsn, undef, undef)
   or die $DBI::errstr;
 
-sub most_recent_measurements {
+sub last_state_for {
   my ($thing) = @_;
 
   my $any = $dbh->selectrow_hashref(
@@ -46,7 +47,10 @@ sub most_recent_measurements {
     $thing,
   );
 
-  return ($any, $done);
+  return Ywar::LastState->new({
+    ($any  ? (measurement => $any)  : ()),
+    ($done ? (completion  => $done) : ()),
+  });
 }
 
 sub dayold {
@@ -63,15 +67,16 @@ sub debug { return unless $OPT->debug; STDERR->say(flog($_)) for @_ }
 sub _do_check {
   my ($self, $id, $name, $obs, $check, $extra) = @_;
 
-  my ($any, $done) = most_recent_measurements($name);
+  my $laststate = most_recent_measurements($name);
 
   warn("no existing measurements for $name\n"), return
-    unless $any and $done;
+    unless $laststate->has_last_measurement
+    and    $laststate->has_last_completion;
 
   my $new;
 
   try {
-    $new = $obs->$check($done, $extra // {});
+    $new = $obs->$check($laststate, $extra // {});
   } catch {
     warn "error while checking $name: $_";
   };

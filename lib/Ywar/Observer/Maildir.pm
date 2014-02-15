@@ -21,12 +21,12 @@ has stats => (
 );
 
 sub decreasing_flagged_mail {
-  my ($self, $prev) = @_;
+  my ($self, $laststate) = @_;
   # flagged mail should be less than it was last time, or <10
 
   my %result = (value => $self->stats->{flagged_count});
 
-  if ($result{value} < max($prev->{measured_value}, 10)) {
+  if ($result{value} < max($laststate->completion->{measured_value}, 10)) {
     @result{qw(met_goal note)} = (1, "new count: $result{value}");
   }
 
@@ -34,12 +34,12 @@ sub decreasing_flagged_mail {
 }
 
 sub decreasing_unread_mail {
-  my ($self, $prev) = @_;
+  my ($self, $laststate) = @_;
   # unread mail should be less than it was last time, or <25
 
   my %result = (value => $self->stats->{unread_count});
 
-  if ($result{value} < max($prev->{measured_value}, 25)) {
+  if ($result{value} < max($laststate->completion->{measured_value}, 25)) {
     @result{qw(met_goal note)} = (1, "new count: $result{value}");
   }
 
@@ -47,7 +47,7 @@ sub decreasing_unread_mail {
 }
 
 sub folder_old_unread {
-  my ($self, $prev, $arg) = @_;
+  my ($self, $laststate, $arg) = @_;
   my $folder = $arg->{folder};
   my $age    = $arg->{age};
 
@@ -63,7 +63,7 @@ sub folder_old_unread {
     ),
   );
 
-  if ($old_unread == 0 or $old_unread <= $prev->{measured_value}) {
+  if ($old_unread == 0 or $old_unread <= $laststate->completion->{measured_value}) {
     $result{met_goal} = 1;
   }
 

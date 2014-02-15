@@ -5,12 +5,12 @@ use Moose;
 use Path::Iterator::Rule;
 
 sub more_files_in_dir {
-  my ($self, $prev, $arg) = @_;
+  my ($self, $laststate, $arg) = @_;
   my $dir = $arg->{dir};
 
   my $count = Path::Iterator::Rule->file->all($dir);
 
-  my $last = $prev->{measured_value};
+  my $last = $laststate->completion->{measured_value};
   warn "fewer files today ($count) than last time ($last)\n"
     if $count < $last;
 
@@ -23,12 +23,12 @@ sub more_files_in_dir {
 
 # not sure I'm happy with this being a distinct method
 sub more_files_across_dirs {
-  my ($self, $prev, $arg) = @_;
+  my ($self, $laststate, $arg) = @_;
   my $dirs = $arg->{dirs};
 
   my $count = Path::Iterator::Rule->file->all(@$dirs);
 
-  my $last = $prev->{measured_value};
+  my $last = $laststate->completion->{measured_value};
   warn "fewer files today ($count) than last time ($last)\n"
     if $count < $last;
 

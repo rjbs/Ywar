@@ -10,7 +10,7 @@ use Time::Duration;
 has token => (is => 'ro', required => 1);
 
 sub worked_out {
-  my ($self, $prev) = @_;
+  my ($self, $laststate) = @_;
 
   # Recorded is the epoch sec. of the last activity.
   my $ua   = LWP::UserAgent->new(keep_alive => 1);
@@ -38,7 +38,7 @@ sub worked_out {
     $item->{start_time} = $dt;
 
     $most_recent ||= $item;
-    last unless $item->{start_time}->epoch > $prev->{measured_at};
+    last unless $item->{start_time}->epoch > $laststate->completion->{measured_at};
     push @activities, $item;
   }
 

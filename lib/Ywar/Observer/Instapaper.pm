@@ -10,7 +10,7 @@ has [ qw( consumer_key consumer_secret oauth_token oauth_token_secret ) ] => (
 );
 
 sub did_reading {
-  my ($self, $prev) = @_;
+  my ($self, $laststate) = @_;
 
   # Recorded is the number of items that were 14 days old yesterday.  The
   # number of items 15 days old today should be fewer.
@@ -22,7 +22,7 @@ sub did_reading {
   my $old_14 = grep { $_->{time} < $^T - 14 * 86_400 } @bookmarks;
   my $old_15 = grep { $_->{time} < $^T - 15 * 86_400 } @bookmarks;
 
-  my $last = $prev->{measured_value};
+  my $last = $laststate->completion->{measured_value};
 
   my %result;
 

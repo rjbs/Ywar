@@ -43,12 +43,12 @@ sub nothing_overdue {
 }
 
 sub closed_old_tasks {
-  my ($self, $prev) = @_;
+  my ($self, $laststate) = @_;
 
   my %count;
 
   for my $age (
-    [ last  => $prev->{measured_at} ],
+    [ last  => $laststate->completion->{measured_at} ],
     [ today => $^T ],
   ) {
     my $date = DateTime->from_epoch(epoch => $age->[1])
@@ -69,7 +69,7 @@ sub closed_old_tasks {
     $count{ $age->[0] } = sum0 map {; scalar @{ $_->{taskseries} } } @series;
   }
 
-  my $last = $prev->{measured_value};
+  my $last = $laststate->completion->{measured_value};
 
   my %result = (value => $count{today});
 

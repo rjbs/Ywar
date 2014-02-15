@@ -3,7 +3,7 @@ package Ywar::Observer::Rubric;
 use Moose;
 
 sub posted_new_entry {
-  my ($self, $prev) = @_;
+  my ($self, $laststate) = @_;
 
   my $rubric_dbh = DBI->connect("dbi:SQLite:/home/rjbs/rubric/rubric.db", undef, undef)
     or die $DBI::errstr;
@@ -17,8 +17,8 @@ sub posted_new_entry {
     LIMIT 1",
   );
 
-  return { met_goal => 0, value => $prev->{measured_value} }
-    unless $last_post && $last_post->{created} > $prev->{measured_value};
+  return { met_goal => 0, value => $laststate->completion->{measured_value} }
+    unless $last_post && $last_post->{created} > $laststate->completion->{measured_value};
 
   return {
     met_goal => 1,

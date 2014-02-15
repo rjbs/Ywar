@@ -7,7 +7,7 @@ use URI;
 use List::Util 'first';
 
 sub did_post {
-  my ($self, $prev, $args) = @_;
+  my ($self, $laststate, $args) = @_;
 
   my $feed = XML::Feed->parse(URI->new($args->{url}))
     or die XML::Feed->errstr;

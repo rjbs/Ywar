@@ -23,7 +23,7 @@ has userid => (is => 'ro', required => 1);
 has token  => (is => 'ro', required => 1);
 
 sub closed_issues {
-  my ($self, $prev) = @_;
+  my ($self, $laststate) = @_;
 
   my $repos = $self->pithub->issues->list(params => { filter => 'all' });
 
@@ -48,7 +48,7 @@ sub closed_issues {
 
   my %result = (value => $owned_14);
 
-  if (my $diff = $prev->{measured_value} - $owned_15) {
+  if (my $diff = $laststate->completion->{measured_value} - $owned_15) {
     @result{ qw(note met_goal) } = ("closed: $diff", 1);
   }
 
@@ -56,7 +56,7 @@ sub closed_issues {
 }
 
 sub file_sha_changed {
-  my ($self, $prev, $arg) = @_;
+  my ($self, $laststate, $arg) = @_;
   my ($user, $repo, $path) = @$arg{ qw(user repo path) };
 
   my $contents = $self->pithub->repos->contents->new(
@@ -69,12 +69,12 @@ sub file_sha_changed {
   return {
     note     => "latest sha: $new_sha",
     value    => $new_sha,
-    met_goal => $new_sha ne $prev->{measured_value} ? 1 : 0,
+    met_goal => $new_sha ne $laststate->completion->{measured_value} ? 1 : 0,
   }
 }
 
 sub branch_sha_changed {
-  my ($self, $prev, $arg) = @_;
+  my ($self, $laststate, $arg) = @_;
   my ($user, $repo, $branch_name) = @$arg{ qw(user repo branch) };
 
   my $branch_iter = $self->pithub->repos->branches(
@@ -94,7 +94,7 @@ sub branch_sha_changed {
   return {
     note     => "latest sha: $new_sha",
     value    => $new_sha,
-    met_goal => $new_sha ne $prev->{measured_value} ? 1 : 0,
+    met_goal => $new_sha ne $laststate->completion->{measured_value} ? 1 : 0,
   }
 }
 

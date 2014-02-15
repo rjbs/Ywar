@@ -9,7 +9,7 @@ use LWP::UserAgent;
 has auth => (is => 'ro', required => 1);
 
 sub did_reading {
-  my ($self, $prev) = @_;
+  my ($self, $laststate) = @_;
 
   # Recorded is the number of items that were one days old yesterday.
   # The goal is to have nothing unread over 24 hours old.
