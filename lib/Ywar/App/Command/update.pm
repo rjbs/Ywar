@@ -67,7 +67,7 @@ sub debug { return unless $OPT->debug; STDERR->say(flog($_)) for @_ }
 sub _do_check {
   my ($self, $id, $name, $obs, $check, $extra) = @_;
 
-  my $laststate = most_recent_measurements($name);
+  my $laststate = last_state_for($name);
 
   warn("no existing measurements for $name\n"), return
     unless $laststate->has_last_measurement
