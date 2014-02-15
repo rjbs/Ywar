@@ -25,9 +25,10 @@ my $dsn = Ywar::Config->config->{dsn};
 my $dbh = DBI->connect($dsn, undef, undef)
   or die $DBI::errstr;
 
-sub most_recent_measurement {
+sub most_recent_measurements {
   my ($thing) = @_;
-  return $dbh->selectrow_hashref(
+
+  my $any = $dbh->selectrow_hashref(
     "SELECT thing_measured, measured_at, measured_value
     FROM lifestats
     WHERE thing_measured = ?
@@ -35,6 +36,17 @@ sub most_recent_measurement {
     undef,
     $thing,
   );
+
+  my $done = $dbh->selectrow_hashref(
+    "SELECT thing_measured, measured_at, measured_value
+    FROM lifestats
+    WHERE thing_measured = ? AND goal_completed = 1
+    ORDER BY measured_at DESC",
+    undef,
+    $thing,
+  );
+
+  return ($any, $done);
 }
 
 sub dayold {
@@ -51,20 +63,24 @@ sub debug { return unless $OPT->debug; STDERR->say(flog($_)) for @_ }
 sub _do_check {
   my ($self, $id, $name, $obs, $check, $extra) = @_;
 
+  my ($any, $done) = most_recent_measurements($name);
+
   warn("no existing measurements for $name\n"), return
-    unless my $prev = most_recent_measurement($name);
+    unless $any and $done;
 
   my $new;
 
   try {
-    $new = $obs->$check($prev, $extra // {});
+    $new = $obs->$check($done, $extra // {});
   } catch {
     warn "error while checking $name: $_";
   };
 
   debug("$name = no measurement"), return unless $new;
-  debug([ "$name = %s -> %s", $prev, $new ]);
-  debug("$name = too recent; not saving"), return unless dayold($prev);
+  debug([ "$name = %s -> %s", $done, $new ]);
+
+  # debug("$name = too recent; not saving"), return unless dayold($done);
+
   update_tdp($id, $new) if $note->{met_goal};
   save_measurement("$name", $new);
 }
