@@ -70,8 +70,8 @@ sub _do_check {
   my $laststate = last_state_for($name);
 
   warn("no existing measurements for $name\n"), return
-    unless $laststate->has_last_measurement
-    and    $laststate->has_last_completion;
+    unless $laststate->has_measurement
+    and    $laststate->has_completion;
 
   my $new;
 
