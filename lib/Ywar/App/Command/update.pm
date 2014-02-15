@@ -65,7 +65,7 @@ sub _do_check {
   debug("$name = no measurement"), return unless $new;
   debug([ "$name = %s -> %s", $prev, $new ]);
   debug("$name = too recent; not saving"), return unless dayold($prev);
-  complete_goal($id, $new->{note}, $prev) if $new->{met_goal};
+  update_tdp($id, $new) if $note->{met_goal};
   save_measurement("$name", $new);
 }
 
@@ -100,21 +100,24 @@ sub execute {
   }
 }
 
-sub complete_goal {
-  my ($id, $note, $prev) = @_;
+sub update_tdp {
+  my ($id, $new) = @_;
   if ($OPT->dry_run) {
-    warn "dry run: not completing goal $id ($note)\n";
+    warn "dry run: not completing goal $id ($new->{note})\n";
     return;
   }
 
   my $res = LWP::UserAgent->new->post(
     "http://tdp.me/v1/goals/$id/completion",
-    Content => JSON->new->encode({ note => $note }),
+    Content => JSON->new->encode({
+      note     => $new->{note},
+      quantity => ($new->{met_goal} ? 1 : 0),
+    }),
     'Content-type' => 'application/json',
     'X-Access-Token' => Ywar::Config->config->{TDP}{token},
   );
 
-  warn "error completing $id: " . $res->as_string unless $res->is_success;
+  warn "error updating goal $id: " . $res->as_string unless $res->is_success;
 }
 
 sub save_measurement {
