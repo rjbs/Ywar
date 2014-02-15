@@ -82,11 +82,11 @@ sub _do_check {
   };
 
   debug("$name = no measurement"), return unless $new;
-  debug([ "$name = %s -> %s", $done, $new ]);
+  debug([ "$name = %s -> %s", $laststate, $new ]);
 
   # debug("$name = too recent; not saving"), return unless dayold($done);
 
-  update_tdp($id, $new) if $note->{met_goal};
+  update_tdp($id, $new) if $new->{met_goal};
   save_measurement("$name", $new);
 }
 
@@ -144,7 +144,7 @@ sub update_tdp {
 sub save_measurement {
   my ($thing, $new) = @_;
   if ($OPT->dry_run) {
-    warn "dry run: not really setting $thing to $value\n";
+    warn "dry run: not really setting $thing to $new->{value}\n";
     return;
   }
 
