@@ -8,7 +8,7 @@ sub more_files_in_dir {
   my ($self, $laststate, $arg) = @_;
   my $dir = $arg->{dir};
 
-  my $count = Path::Iterator::Rule->file->all($dir);
+  my $count = Path::Iterator::Rule->new->file->all($dir);
 
   my $last = $laststate->completion->{measured_value};
   warn "fewer files today ($count) than last time ($last)\n"
@@ -26,7 +26,7 @@ sub more_files_across_dirs {
   my ($self, $laststate, $arg) = @_;
   my $dirs = $arg->{dirs};
 
-  my $count = Path::Iterator::Rule->file->all(@$dirs);
+  my $count = Path::Iterator::Rule->new->file->all(@$dirs);
 
   my $last = $laststate->completion->{measured_value};
   warn "fewer files today ($count) than last time ($last)\n"
