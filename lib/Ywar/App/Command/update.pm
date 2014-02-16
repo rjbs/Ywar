@@ -59,6 +59,26 @@ sub dayold {
   return;
 }
 
+sub _push_notif {
+  my ($self, $text) = @_;
+
+  my $observers = Ywar::Config->config->{observers};
+  my $ua  = LWP::UserAgent->new;
+  my $res = $ua->post(
+    "https://api.pushover.net/1/messages.json",
+    {
+      user    => Ywar::Config->config->{Pushover}{usertoken},
+      token   => Ywar::Config->config->{Pushover}{apptoken},
+      message => "$text",
+      title   => "Ywar: goal complete",
+    },
+  );
+
+  unless ($res->is_success) {
+    warn "error with push notification: " . $res->as_string;
+  }
+}
+
 our $OPT;
 
 use String::Flogger 'flog';
@@ -92,6 +112,7 @@ sub _do_check {
   # debug("$name = too recent; not saving"), return unless dayold($done);
 
   update_tdp($id, $new) if $new->{met_goal};
+  $self->_push_notif("completed goal: $name") if $new->{met_goal};
   save_measurement("$name", $new);
 }
 
