@@ -3,16 +3,11 @@ package Ywar::Observer::Goodreads;
 use Moose;
 
 use LWP::UserAgent;
-use XML::Simple 'XMLin';
+use XML::Tiny;
 use JSON 'decode_json', 'encode_json';
 use DateTime::Format::ISO8601;
 
 has api_key => (
-   is => 'ro',
-   required => 1,
-);
-
-has api_secret => (
    is => 'ro',
    required => 1,
 );
@@ -104,7 +99,6 @@ __END__
   Goodreads:
      config:
         api_key: foo
-        api_secret: bar
         user_id: baz
      checks:
          read.acm:
