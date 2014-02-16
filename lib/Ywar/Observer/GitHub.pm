@@ -3,6 +3,7 @@ package Ywar::Observer::GitHub;
 use Moose;
 
 use Pithub;
+use Ywar::Util qw(not_today);
 
 has pithub => (
   is   => 'ro',
@@ -49,7 +50,8 @@ sub closed_issues {
   my %result = (value => $owned_14);
 
   if (my $diff = $laststate->completion->{measured_value} - $owned_15) {
-    @result{ qw(note met_goal) } = ("closed: $diff", 1);
+    $result{note} = "closed: $diff";
+    $result{met_goal} = not_today($laststate->completion);
   }
 
   return \%result;
@@ -69,7 +71,10 @@ sub file_sha_changed {
   return {
     note     => "latest sha: $new_sha",
     value    => $new_sha,
-    met_goal => $new_sha ne $laststate->completion->{measured_value} ? 1 : 0,
+    met_goal => (
+      not_today($laststate->completion)
+      && $new_sha ne $laststate->completion->{measured_value},
+    ),
   }
 }
 
@@ -94,7 +99,10 @@ sub branch_sha_changed {
   return {
     note     => "latest sha: $new_sha",
     value    => $new_sha,
-    met_goal => $new_sha ne $laststate->completion->{measured_value} ? 1 : 0,
+    met_goal => (
+      not_today($laststate->completion)
+      && $new_sha ne $laststate->completion->{measured_value},
+    ),
   }
 }
 

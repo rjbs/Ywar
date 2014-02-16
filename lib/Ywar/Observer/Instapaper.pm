@@ -3,6 +3,7 @@ package Ywar::Observer::Instapaper;
 use Moose;
 
 use Ywar::Instapaper;
+use Ywar::Util qw(not_today);
 
 has [ qw( consumer_key consumer_secret oauth_token oauth_token_secret ) ] => (
   is => 'ro',
@@ -28,7 +29,8 @@ sub did_reading {
 
   if ($old_15 < $last) {
     my $closed = $last - $old_15;
-    @result{ qw(note met_goal) } = ("items read (or deleted): $closed", 1);
+    $result{note} = "items read (or deleted): $closed";
+    $result{met_goal} = not_today($laststate->completion);
   }
 
   $result{value} = $old_14;

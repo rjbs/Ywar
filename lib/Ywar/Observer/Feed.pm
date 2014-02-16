@@ -6,6 +6,10 @@ use XML::Feed;
 use URI;
 use List::Util 'first';
 
+## I think the logic of this observer seems wrongheaded.  It should probably
+## say met_goal whenever a new post is made on a new day, and care nothing
+## about the interval length, which is TDP's job. -- rjbs, 2014-02-15
+
 sub did_post {
   my ($self, $laststate, $args) = @_;
 

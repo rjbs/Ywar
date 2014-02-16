@@ -5,6 +5,7 @@ use Moose;
 use DateTime::Format::ISO8601;
 use JSON 2;
 use LWP::UserAgent;
+use Ywar::Util qw(not_today);
 
 has auth => (is => 'ro', required => 1);
 
@@ -58,7 +59,7 @@ sub did_reading {
     # all the stats we suggest in this note: -- rjbs, 2013-10-28
     note  => sprintf("at least %s old unread items", $nonrecent),
     value    => $nonrecent,
-    met_goal => $nonrecent <= 10 ? 1 : 0,
+    met_goal => $nonrecent <= 10 && not_today($laststate->completion),
   };
 }
 

@@ -82,7 +82,12 @@ sub _do_check {
   };
 
   debug("$name = no measurement"), return unless $new;
-  debug([ "$name = %s -> %s", $laststate, $new ]);
+  debug([
+    "$name = (M: %s / C: %s) -> %s",
+    $laststate->measurement->{measured_value},
+    $laststate->completion->{measured_value},
+    $new,
+  ]);
 
   # debug("$name = too recent; not saving"), return unless dayold($done);
 

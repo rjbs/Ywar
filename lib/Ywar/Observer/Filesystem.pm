@@ -3,6 +3,7 @@ package Ywar::Observer::Filesystem;
 use Moose;
 
 use Path::Iterator::Rule;
+use Ywar::Util qw(not_today);
 
 sub more_files_in_dir {
   my ($self, $laststate, $arg) = @_;
@@ -16,7 +17,7 @@ sub more_files_in_dir {
 
   return {
     value    => $count,
-    met_goal => $count > $last ? 1 : 0,
+    met_goal => $count > $last && not_today($laststate->completion),
     note     => "files added: " . ($count - $last),
   };
 }
@@ -34,7 +35,7 @@ sub more_files_across_dirs {
 
   return {
     value    => $count,
-    met_goal => $count > $last ? 1 : 0,
+    met_goal => $count > $last && not_today($laststate->completion),
     note     => "files added: " . ($count - $last),
   };
 }

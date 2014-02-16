@@ -4,6 +4,7 @@ use Moose;
 
 use List::Util qw(sum0);
 use WebService::RTMAgent;
+use Ywar::Util qw(not_today);
 
 has [ qw(api_key api_secret) ] => (is => 'ro', required => 1);
 
@@ -22,7 +23,7 @@ has rtm_ua => (
 );
 
 sub nothing_overdue {
-  my ($self) = @_; # nothing to do with prev
+  my ($self, $laststate) = @_;
 
   my $res = $self->rtm_ua->tasks_getList(
     'filter=status:incomplete AND dueBefore:today'
@@ -37,7 +38,7 @@ sub nothing_overdue {
 
   return {
     value    => $count,
-    met_goal => $count == 0 ? 1 : 0,
+    met_goal => $count == 0 && not_today($laststate->completion),
     note     => "overdue items: $count",
   };
 }
@@ -75,7 +76,8 @@ sub closed_old_tasks {
 
   if ($count{last} == 0 || $count{last} < $last) {
     my $closed = $last - $count{last};
-    @result{ qw(note met_goal) } = ("items closed: $closed", 1);
+    $result{note} = "items closed: $closed";
+    $result{met_goal} = not_today($laststate->completion);
   }
 
   return \%result;

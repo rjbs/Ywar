@@ -3,6 +3,7 @@ package Ywar::Observer::Maildir;
 use Moose;
 
 use Ywar::Maildir -all;
+use Ywar::Util qw(not_today);
 
 sub max { (sort { $b <=> $a } @_)[0] }
 
@@ -27,7 +28,8 @@ sub decreasing_flagged_mail {
   my %result = (value => $self->stats->{flagged_count});
 
   if ($result{value} < max($laststate->completion->{measured_value}, 10)) {
-    @result{qw(met_goal note)} = (1, "new count: $result{value}");
+    $result{note} = "new count: $result{value}";
+    $result{met_goal} = not_today($laststate->completion);
   }
 
   return \%result;
@@ -40,7 +42,8 @@ sub decreasing_unread_mail {
   my %result = (value => $self->stats->{unread_count});
 
   if ($result{value} < max($laststate->completion->{measured_value}, 25)) {
-    @result{qw(met_goal note)} = (1, "new count: $result{value}");
+    $result{note} = "new count: $result{value}";
+    $result{met_goal} = not_today($laststate->completion);
   }
 
   return \%result;
@@ -64,7 +67,7 @@ sub folder_old_unread {
   );
 
   if ($old_unread == 0 or $old_unread <= $laststate->completion->{measured_value}) {
-    $result{met_goal} = 1;
+    $result{met_goal} = not_today($laststate->completion);
   }
 
   return \%result;

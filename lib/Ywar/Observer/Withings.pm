@@ -3,11 +3,14 @@ package Ywar::Observer::Withings;
 use Moose;
 
 use Net::OAuth::Client;
+use Ywar::Util qw(not_today);
 
 has [ qw(api_key secret token tsecret userid) ] => (is => 'ro', required => 1);
 
 sub measured_weight {
   my ($self, $laststate) = @_;
+
+  return unless not_today($laststate->completion);
 
   my $client = Net::OAuth::Client->new(
     $self->api_key,

@@ -6,6 +6,7 @@ use DateTime::Format::HTTP;
 use JSON;
 use LWP::UserAgent;
 use Time::Duration;
+use Ywar::Util qw(not_today);
 
 has token => (is => 'ro', required => 1);
 
@@ -53,7 +54,7 @@ sub worked_out {
     (@activities ? @activities : $most_recent);
 
   my %result = (
-    met_goal => @activities ? 1 : 0,
+    met_goal => @activities && not_today($laststate->completion),
     value    => $most_recent->{start_time}->epoch,
     note     => $string,
   );
