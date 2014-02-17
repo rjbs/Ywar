@@ -14,6 +14,6 @@ but it has a lot of code you might want to rip out and re-use.
 * [thoughts on how this system fails](http://rjbs.manxome.org/rubric/entry/2003)
 * [integrating TDP with RTM](http://rjbs.manxome.org/rubric/entry/2004)
 * [improving my code review
-  automation](http://rjbs.manxome.org/rubric/entry/2004) (note that this
+  automation](http://rjbs.manxome.org/rubric/entry/2007) (note that this
   program is not in this repo
 * [introducing daily agenda emails](http://rjbs.manxome.org/rubric/entry/2010)
