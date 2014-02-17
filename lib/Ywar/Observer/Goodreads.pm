@@ -32,7 +32,7 @@ sub read_pages_on_shelf {
   unless ($arg->{goal_pages}) { warn "no goal pages set!"; return; }
   unless ($arg->{shelf})      { warn "no shelf selected!"; return; }
 
-  my $old  = $JSON->decode( $laststate->{measured_value} );
+  my $old  = $JSON->decode( $laststate->completion->{measured_value} );
 
   my $res = LWP::UserAgent->new->get(
     sprintf 'https://www.goodreads.com/review/list?format=json&v=2&id=%s&key=%s&shelf=currently-reading',
