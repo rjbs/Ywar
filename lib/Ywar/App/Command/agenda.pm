@@ -18,9 +18,9 @@ use WebService::RTMAgent;
 use YAML::XS ();
 use Ywar::Config;
 
-my $TZ = Ywar::Config->config->{TZ} // 'America/New_York';
 sub dt {
-  DateTimeX::Easy->parse($_[0])->truncate(to => 'day')->set_time_zone($TZ);
+  DateTimeX::Easy->parse($_[0])->truncate(to => 'day')
+                               ->set_time_zone(Ywar::Config->time_zone);
 }
 
 sub _rtm_ua {
@@ -38,7 +38,7 @@ sub _rtm_ua {
 sub execute {
   my ($self, $opt, $args) = @_;
 
-  my $today   = DateTime->today(time_zone => $TZ);
+  my $today   = DateTime->today(time_zone => Ywar::Config->time_zone);
   my %for_date;
 
   {

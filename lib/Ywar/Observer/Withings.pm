@@ -30,7 +30,7 @@ sub measured_weight {
     token_secret => $self->tsecret,
   );
 
-  my $start_o_day = DateTime->today(time_zone => 'America/New_York')
+  my $start_o_day = DateTime->today(time_zone => Ywar::Config->time_zone)
                   ->epoch;
 
   my $res = $access_token->get(
