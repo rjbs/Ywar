@@ -3,7 +3,17 @@ use warnings;
 package Ywar::Config;
 
 use Carp qw(confess);
+use DateTime::TimeZone;
 use YAML::XS ();
+
+sub time_zone {
+  my ($self) = @_;
+  state $tz = DateTime::TimeZone->new(
+    name => $self->config->{time_zone} // 'UTC'
+  );
+
+  return $tz;
+}
 
 sub config {
   my ($self) = @_;
