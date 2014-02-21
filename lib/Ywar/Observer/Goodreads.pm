@@ -53,7 +53,7 @@ sub read_pages_on_shelf {
   }
 
   my %to_save;
-  my $total_diff;
+  my $total_diff = 0;
   my @notes;
   for my $id (keys %current) {
     my $status = $current{$id};
