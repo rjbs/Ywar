@@ -115,6 +115,10 @@ sub _get_review_status {
               : ($page_count * ($pct_node->textContent / 100)));
   }
 
+  if (grep {; 'read' eq $_ } @{ $status{shelves} }) {
+    $page = $page_count;
+  }
+
   $status{current_page} = $page;
   $status{title} = $title;
 
