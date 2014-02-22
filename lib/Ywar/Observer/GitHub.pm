@@ -33,6 +33,9 @@ sub closed_issues {
 
   my @issues;
   while ( my $issue = $repos->next ) {
+    warn("couldn't determine repository owner for issue"), return
+      unless defined $issue->{repository}{owner}{id};
+
     next unless $issue->{repository}{owner}{id} == $self->userid;
 
     my $date = DateTime::Format::ISO8601->parse_datetime($issue->{created_at})
@@ -68,6 +71,11 @@ sub file_sha_changed {
   );
 
   my $new_sha = $contents->get(path => $path)->first->{sha};
+
+  unless (defined $new_sha) {
+    warn "got an undef sha for $path, giving up";
+    return;
+  }
 
   return {
     note     => "latest sha: $new_sha",
