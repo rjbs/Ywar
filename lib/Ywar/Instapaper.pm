@@ -24,6 +24,9 @@ sub bookmark_list {
     ],
   );
 
+  die "error getting Instapaper bookmark list: " . $r->decoded_content
+    unless $r->is_success;
+
   my @bookmarks = sort {; $a->{time} <=> $b->{time} }
                   grep {; $_->{type} eq 'bookmark' }
                   @{ JSON->new->decode($r->decoded_content) };
