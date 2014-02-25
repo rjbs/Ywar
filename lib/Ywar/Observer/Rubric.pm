@@ -17,8 +17,8 @@ sub posted_new_entry {
     LIMIT 1",
   );
 
-  return { met_goal => 0, value => $laststate->completion->{measured_value} }
-    unless $last_post && $last_post->{created} > $laststate->completion->{measured_value};
+  return { met_goal => 0, value => $laststate->measurement->{measured_value} }
+    unless $last_post && $last_post->{created} > $laststate->measurement->{measured_value};
 
   return {
     met_goal => 1,
