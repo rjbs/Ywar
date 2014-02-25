@@ -35,20 +35,34 @@ sub read_pages_on_shelf {
   my $old  = $JSON->decode( $laststate->completion->{measured_value} );
 
   my $res = LWP::UserAgent->new->get(
-    sprintf 'https://www.goodreads.com/review/list?format=json&v=2&id=%s&key=%s&shelf=currently-reading',
+    sprintf 'https://www.goodreads.com/review/list?format=xml&v=2&id=%s&key=%s&shelf=currently-reading',
       $self->user_id,
       $self->api_key,
   );
 
-  my @review_ids = uniq(
-    (map {; $_->{id} } @{ $JSON->decode($res->decoded_content) }),
-    keys %$old,
-  );
+  open my $fh, '<', \$res->decoded_content(charset => 'none')
+    or die "error making handle to XML results: $!";
+
+  my $doc = XML::LibXML->load_xml(IO => $fh);
+
+  my @reviews = $doc->getElementsByTagName('review');
+  my @review_ids = keys %$old;
+  for my $review (@reviews) {
+    my @shelves = map {; $_->getAttribute('name') }
+                  $review->getElementsByTagName('shelf');
+
+    next unless grep {; fc $_ eq fc $arg->{shelf} } @shelves;
+
+    my ($id_node) = $review->nonBlankChildNodes;
+    die "first child in a <review> node was not its id: $review\n"
+      unless $id_node->localname eq 'id';
+
+    push @review_ids, $id_node->textContent;
+  }
 
   my %current;
-  REVIEW: for my $review_id (@review_ids) {
+  REVIEW: for my $review_id (uniq @review_ids) {
     my $status = $self->_get_review_status($review_id);
-    next REVIEW unless grep {; fc $_ eq fc $arg->{shelf} } @{$status->{shelves}};
     $current{ $review_id } = $status;
   }
 
