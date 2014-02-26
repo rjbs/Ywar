@@ -24,7 +24,7 @@ has lwp => (
 
 my $BASE = 'https://www.goodreads.com';
 
-my $JSON = JSON->new;
+my $JSON = JSON->new->canonical;
 
 sub read_pages_on_shelf {
   my ($self, $laststate, $arg) = @_;
