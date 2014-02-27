@@ -22,12 +22,14 @@ has stats => (
 );
 
 sub decreasing_flagged_mail {
-  my ($self, $laststate) = @_;
+  my ($self, $laststate, $arg) = @_;
+
   # flagged mail should be less than it was last time, or <10
+  my $min = $arg->{threshold} // 10;
 
   my %result = (value => $self->stats->{flagged_count});
 
-  if ($result{value} < max($laststate->completion->{measured_value}, 10)) {
+  if ($result{value} < max($laststate->completion->{measured_value}, $min)) {
     $result{note} = "new count: $result{value}";
     $result{met_goal} = not_today($laststate->completion);
   }
@@ -36,12 +38,14 @@ sub decreasing_flagged_mail {
 }
 
 sub decreasing_unread_mail {
-  my ($self, $laststate) = @_;
+  my ($self, $laststate, $arg) = @_;
+
   # unread mail should be less than it was last time, or <25
+  my $min = $arg->{threshold} // 10;
 
   my %result = (value => $self->stats->{unread_count});
 
-  if ($result{value} < max($laststate->completion->{measured_value}, 25)) {
+  if ($result{value} < max($laststate->completion->{measured_value}, $min)) {
     $result{note} = "new count: $result{value}";
     $result{met_goal} = not_today($laststate->completion);
   }
