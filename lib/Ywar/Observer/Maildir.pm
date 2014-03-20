@@ -41,7 +41,7 @@ sub decreasing_unread_mail {
   my ($self, $laststate, $arg) = @_;
 
   # unread mail should be less than it was last time, or <25
-  my $min = $arg->{threshold} // 10;
+  my $min = $arg->{threshold} // 25;
 
   my %result = (value => $self->stats->{unread_count});
 
