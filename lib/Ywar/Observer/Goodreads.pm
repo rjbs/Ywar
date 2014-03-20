@@ -62,8 +62,11 @@ sub read_pages_on_shelf {
 
   my %current;
   REVIEW: for my $review_id (uniq @review_ids) {
-    my $status = $self->_get_review_status($review_id);
-    $current{ $review_id } = $status;
+    if (my $status = $self->_get_review_status($review_id)) {
+      $current{ $review_id } = $status;
+    } else {
+      warn "couldn't deal with status of book $review_id";
+    }
   }
 
   my %to_save;
@@ -111,8 +114,9 @@ sub _get_review_status {
   my ($total_page_node) = $doc->getElementsByTagName('num_pages');
   my $page_count;
   unless ($total_page_node and ($page_count = $total_page_node->textContent)) {
-    warn "couldn't figure out page count for book on review $review_id";
-    next REVIEW;
+    warn "couldn't figure out page count for book on review $review_id ($title)";
+    warn "<<$doc>>\n";
+    return;
   }
 
   $status{page_count} = $page_count;
@@ -125,8 +129,8 @@ sub _get_review_status {
     my ($pct_node)  = $latest->getElementsByTagName('percent');
 
     $page = int(($page_node->getAttribute('nil') // 'false') eq 'false'
-              ? $page_node->textContent
-              : ($page_count * ($pct_node->textContent / 100)));
+          ? $page_node->textContent
+          : ($page_count * ($pct_node->textContent / 100)));
   }
 
   if (grep {; 'read' eq $_ } @{ $status{shelves} }) {
