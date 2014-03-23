@@ -89,6 +89,23 @@ sub read_pages_on_shelf {
   };
 }
 
+my %GOODREAD_OVERRIDE = (
+  '888491548' => 256,
+);
+
+sub _page_count_for_review {
+  my ($self, $doc, $review_id, $title) = @_;
+
+  return $GOODREAD_OVERRIDE{ $review_id }
+    if exists $GOODREAD_OVERRIDE{ $review_id };
+
+  my ($total_page_node) = $doc->getElementsByTagName('num_pages');
+  return unless $total_page_node;
+  return unless my $page_count = $total_page_node->textContent;
+
+  return $page_count;
+}
+
 sub _get_review_status {
   my ($self, $review_id) = @_;
 
@@ -111,9 +128,9 @@ sub _get_review_status {
 
   my $title = ($doc->getElementsByTagName('title'))[0]->textContent;
 
-  my ($total_page_node) = $doc->getElementsByTagName('num_pages');
-  my $page_count;
-  unless ($total_page_node and ($page_count = $total_page_node->textContent)) {
+  my $page_count = $self->_page_count_for_review($doc, $review_id, $title);
+
+  unless ($page_count) {
     warn "couldn't figure out page count for book on review $review_id ($title)";
     warn "<<$doc>>\n";
     return;
