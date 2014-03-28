@@ -33,7 +33,8 @@ sub last_state_for {
     "SELECT thing_measured, measured_at, measured_value
     FROM lifestats
     WHERE thing_measured = ?
-    ORDER BY measured_at DESC",
+    ORDER BY measured_at DESC
+    LIMIT 1",
     undef,
     $thing,
   );
@@ -42,14 +43,33 @@ sub last_state_for {
     "SELECT thing_measured, measured_at, measured_value
     FROM lifestats
     WHERE thing_measured = ? AND goal_completed = '1'
-    ORDER BY measured_at DESC",
+    ORDER BY measured_at DESC
+    LIMIT 1",
     undef,
     $thing,
+  );
+
+  my $today_start = DateTime->today(time_zone => Ywar::Config->time_zone);
+  my $yest_start  = $today_start->clone->subtract(days => 1);
+
+  my $yesterday_value = $dbh->selectrow_hashref(
+    "SELECT thing_measured, measured_at, measured_value
+    FROM lifestats
+    WHERE thing_measured = ?
+      AND 0+measured_at >= ?
+      AND 0+measured_at <  ?
+    ORDER BY measured_at DESC
+    LIMIT 1",
+    undef,
+    $thing,
+    $yest_start->epoch,
+    $today_start->epoch,
   );
 
   return Ywar::LastState->new({
     ($any  ? (measurement => $any)  : ()),
     ($done ? (completion  => $done) : ()),
+    ($yesterday_value ? (yesterday_value  => $yesterday_value) : ()),
   });
 }
 

@@ -12,4 +12,9 @@ has completion => (
   predicate => 'has_completion',
 );
 
+has yesterday_value => (
+  is => 'ro',
+  predicate => 'has_yesterday_value',
+);
+
 1;
