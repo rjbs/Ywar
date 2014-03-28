@@ -56,8 +56,8 @@ sub last_state_for {
     "SELECT thing_measured, measured_at, measured_value
     FROM lifestats
     WHERE thing_measured = ?
-      AND 0+measured_at >= ?
-      AND 0+measured_at <  ?
+      AND CAST(measured_at AS INTEGER) >= CAST(? AS INTEGER)
+      AND CAST(measured_at AS INTEGER) <  CAST(? AS INTEGER)
     ORDER BY measured_at DESC
     LIMIT 1",
     undef,

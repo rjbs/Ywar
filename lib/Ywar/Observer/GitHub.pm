@@ -52,7 +52,7 @@ sub closed_issues {
 
   my %result = (value => $owned_14);
 
-  my $closed = $laststate->completion->{measured_value} - $owned_15;
+  my $closed = $laststate->yesterday_value->{measured_value} - $owned_15;
   if ($closed > 0) {
     $result{note} = "closed: $closed";
     $result{met_goal} = not_today($laststate->completion);

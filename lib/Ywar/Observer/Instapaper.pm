@@ -23,7 +23,7 @@ sub did_reading {
   my $old_14 = grep { $_->{time} < $^T - 14 * 86_400 } @bookmarks;
   my $old_15 = grep { $_->{time} < $^T - 15 * 86_400 } @bookmarks;
 
-  my $last = $laststate->completion->{measured_value};
+  my $last = $laststate->yesterday_value->{measured_value};
 
   my %result;
 
