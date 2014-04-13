@@ -104,7 +104,7 @@ sub execute {
 
   {
     # PUT IN EXPIRY DATES FOR NEXT MONTH OF TDP TASKS
-    my $MAX = '28';
+    my $MAX = '96';
 
     my $res = LWP::UserAgent->new->get(
       "http://tdp.me/v1/goals/?range=$MAX,7",
