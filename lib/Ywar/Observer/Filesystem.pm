@@ -40,4 +40,19 @@ sub more_files_across_dirs {
   };
 }
 
+sub fewer_files_in_dir {
+  my ($self, $laststate, $arg) = @_;
+  my $dir = $arg->{dir};
+
+  my $count = Path::Iterator::Rule->new->file->all($dir);
+
+  my $last = $laststate->completion->{measured_value};
+
+  return {
+    value    => $count,
+    met_goal => $count < $last && not_today($laststate->completion),
+    note     => "files cleared: " . ($last - $count),
+  };
+}
+
 1;
