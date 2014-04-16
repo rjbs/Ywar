@@ -42,7 +42,7 @@ sub last_state_for {
   my $done = $dbh->selectrow_hashref(
     "SELECT thing_measured, measured_at, measured_value
     FROM lifestats
-    WHERE thing_measured = ? AND goal_completed = '1'
+    WHERE thing_measured = ? AND goal_completed
     ORDER BY measured_at DESC
     LIMIT 1",
     undef,
