@@ -19,8 +19,9 @@ use YAML::XS ();
 use Ywar::Config;
 
 sub dt {
-  DateTimeX::Easy->parse($_[0])->truncate(to => 'day')
-                               ->set_time_zone(Ywar::Config->time_zone);
+  DateTimeX::Easy->parse(@_)
+    ->set_time_zone(Ywar::Config->time_zone)
+    ->truncate(to => 'day')
 }
 
 sub _rtm_ua {
@@ -89,7 +90,7 @@ sub execute {
     my @tasks  = map {; @{ $_->{taskseries} } } @series;
 
     for my $task (@tasks) {
-      my $due = dt($task->{task}[0]{due});
+      my $due = dt($task->{task}[0]{due}, tz => 'UTC');
 
       my $due_ymd = $due->ymd;
 
