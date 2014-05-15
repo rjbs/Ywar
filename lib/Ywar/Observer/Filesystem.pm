@@ -41,8 +41,7 @@ sub fewer_files_across_dirs {
   my $dirs = $arg->{dirs};
 
   my $count = Path::Iterator::Rule->new->file->all(@$dirs);
-
-  my $last = $laststate->completion->{measured_value};
+  my $last  = $laststate->completion->{measured_value};
 
   return {
     value    => $count,

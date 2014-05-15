@@ -74,6 +74,8 @@ sub closed_old_tasks {
 
   my %result = (value => $count{today});
 
+  # warn "LAST: $last / C-LAST: $count{last} /  NOW: $count{today}\n";
+
   if ($count{last} == 0 || $count{last} < $last) {
     my $closed = $last - $count{last};
     $result{note} = "items closed: $closed";
