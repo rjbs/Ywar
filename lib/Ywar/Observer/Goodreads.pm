@@ -92,6 +92,7 @@ sub read_pages_on_shelf {
 my %GOODREAD_OVERRIDE = (
   '888491548' => 256,
   '938489037' => 218,
+  '945306208' => 298,
 );
 
 sub _page_count_for_review {

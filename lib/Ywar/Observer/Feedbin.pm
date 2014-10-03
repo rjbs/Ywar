@@ -5,6 +5,7 @@ use Moose;
 use DateTime::Format::ISO8601;
 use JSON 2;
 use LWP::UserAgent;
+use Ywar::Logger '$Logger';
 use Ywar::Util qw(not_today);
 
 has auth => (is => 'ro', required => 1);
@@ -45,14 +46,17 @@ sub did_reading {
   };
 
   my $nonrecent = 0;
+  my $total     = 0;
   while (my @entries = $next_page->()) {
     for my $e (@entries) {
       my $date = DateTime::Format::ISO8601->parse_datetime($e->{published});
+      $total++;
       next if $date->epoch >= $^T - 86_400;
       $nonrecent++;
     }
-    last if $nonrecent;
   }
+
+  $Logger->log([ "Feedbin items: %s total, %s nonrecent", $total, $nonrecent ]);
 
   return {
     # We only get enough pages to answer the question atm, so we do not have

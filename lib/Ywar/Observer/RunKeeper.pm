@@ -34,6 +34,7 @@ sub worked_out {
   my $most_recent;
   for my $item (@{ $data->{items} }) {
     next unless $item->{duration} >= 1800;
+    next if $item->{type} eq 'Walking'; # No. -- rjbs, 2014-10-02
 
     my $dt = DateTime::Format::HTTP->parse_datetime($item->{start_time}, 'UTC');
     $item->{start_time} = $dt;
