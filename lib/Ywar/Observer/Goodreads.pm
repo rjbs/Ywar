@@ -133,6 +133,9 @@ sub _get_review_status {
       $review_id,
   );
 
+  die "error getting review $review_id: " . $res->as_string
+    unless $res->is_success;
+
   open my $fh, '<', \$res->decoded_content(charset => 'none')
     or die "error making handle to XML results: $!";
 
