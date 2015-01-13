@@ -6,6 +6,7 @@ use JSON 2 ();
 use LWP::UserAgent;
 use List::AllUtils 'uniq';
 use XML::LibXML;
+use Ywar::Logger '$Logger';
 
 has api_key => (
   is => 'ro',
@@ -76,11 +77,23 @@ sub read_pages_on_shelf {
     my $status = $current{$id};
     my $diff   = $status->{current_page} - ($old->{$id} // 0);
     $diff = 0 if $diff < 0;
+    $Logger->log([
+      "on shelf %s, book %s, was on page %s, now on page %s",
+      $arg->{shelf},
+      $status->{title},
+      $old->{$id},
+      $status->{current_page},
+    ]);
     $total_diff += $diff;
     push @notes, "read $diff pages in $status->{title}" if $diff;
     $to_save{$id} = $status->{current_page}
       if grep { fc $_ eq 'currently-reading' } @{ $status->{shelves} };
   }
+
+  $Logger->log([
+    "on shelf %s, need %s pages read, have %s",
+    $arg->{shelf}, $arg->{goal_pages}, $total_diff,
+  ]);
 
   return {
     note  => join(q{; }, @notes),
