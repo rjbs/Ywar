@@ -45,7 +45,7 @@ sub worked_out {
   }
 
   unless ($most_recent) {
-    warn "got an empty activity feed from RunKeeper";
+    # warn "got an empty activity feed from RunKeeper";
     return;
   }
 
