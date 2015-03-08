@@ -3,6 +3,7 @@ package Ywar::Observer::Filesystem;
 use Moose;
 
 use Path::Iterator::Rule;
+use Ywar::Logger '$Logger';
 use Ywar::Util qw(not_today);
 
 sub more_files_in_dir {
@@ -42,6 +43,8 @@ sub fewer_files_across_dirs {
 
   my $count = Path::Iterator::Rule->new->file->all(@$dirs);
   my $last  = $laststate->completion->{measured_value};
+
+  $Logger->log("last good file count: $last; current count: $count");
 
   return {
     value    => $count,
