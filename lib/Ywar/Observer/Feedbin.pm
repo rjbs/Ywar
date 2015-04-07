@@ -21,27 +21,32 @@ sub did_reading {
   my $auth = $self->auth;
 
   my $per_page = 50;
-  my $page_num = 1;
+
+  my $uri = "https://api.feedbin.me/v2/entries.json"
+          . "?read=false&per_page=$per_page&page=1";
 
   my @entries;
   my $next_page = sub {
-    return if state $exhausted;
+    return unless $uri;
 
-    my $uri = "https://api.feedbin.me/v2/entries.json"
-            . "?read=false&per_page=$per_page&page=$page_num";
+    $Logger->log([ "fetching $uri" ]);
     my $res = $ua->get($uri, 'Authorization' => "Basic $auth");
+    $uri = undef;
 
     unless ($res->is_success) {
       warn "failed to get feeds from Feedbin: " . $res->status_line . "\n";
-      $exhausted = 1;
       return;
     }
 
-    $page_num++;
     my $json = $res->decoded_content;
     my $data = $JSON->decode($json);
     push @entries, @$data;
-    $exhausted = 1 unless @$data == $per_page;
+
+    if (my $links = $res->header('Links')) {
+      my ($wanted) = grep { /rel="next"/ } split /,/, $links;
+      ($uri) = ($wanted // '') =~ /<([^>]+)>/;
+    }
+
     return @$data;
   };
 
