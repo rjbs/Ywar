@@ -46,9 +46,11 @@ sub fewer_files_across_dirs {
 
   $Logger->log("last good file count: $last; current count: $count");
 
+  my $fewer = $count < $last || $count == 0;
+
   return {
     value    => $count,
-    met_goal => $count < $last && not_today($laststate->completion),
+    met_goal => $fewer && not_today($laststate->completion),
     note     => "files cleared: " . ($last - $count),
   };
 }
