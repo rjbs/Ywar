@@ -1,6 +1,6 @@
 CREATE TABLE lifestats (
-  thing_measured not null,
-  measured_at not null,
-  measured_value not null,
-  goal_completed not null
+  thing_measured text not null,
+  measured_at int not null,
+  measured_value text not null,
+  goal_completed boolean not null
 );

@@ -197,7 +197,7 @@ sub save_measurement {
   return $dbh->selectrow_hashref(
     "INSERT INTO lifestats
       (thing_measured, measured_at, measured_value, goal_completed)
-    VALUES (?, ?, ?, ?)",
+    VALUES (?, 0+?, ?, 0+?)",
     undef,
     $thing, $^T, $new->{value}, ($new->{met_goal} ? 1 : 0),
   );
