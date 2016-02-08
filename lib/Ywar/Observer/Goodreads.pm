@@ -103,11 +103,14 @@ sub read_pages_on_shelf {
 }
 
 my %GOODREAD_OVERRIDE = (
+  '874055936' => 204, # Stylized
   '888491548' => 256,
   '938489037' => 218,
   '945306208' => 298,
   '1080170105' => 225,
   '1338597476' => 320,
+  '1419735844' => 337, # Rust Programming Language
+  '1503826885' => 275, # Eclipse Phase: After the Fall
 );
 
 sub _page_count_for_review {
