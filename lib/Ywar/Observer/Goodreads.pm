@@ -31,7 +31,10 @@ sub read_pages_on_shelf {
   my ($self, $laststate, $arg) = @_;
 
   unless ($arg->{goal_pages}) { warn "no goal pages set!"; return; }
-  unless ($arg->{shelf})      { warn "no shelf selected!"; return; }
+  unless ($arg->{shelf} or ($arg->{not_shelves} && @{$arg->{not_shelves}})) {
+    warn "no shelf or not_shelves argument provided!";
+    return;
+  }
 
   my $old  = $JSON->decode( $laststate->completion->{measured_value} );
 
@@ -48,11 +51,14 @@ sub read_pages_on_shelf {
 
   my @reviews = $doc->getElementsByTagName('review');
   my @review_ids = keys %$old;
-  for my $review (@reviews) {
+  REVIEW: for my $review (@reviews) {
     my @shelves = map {; $_->getAttribute('name') }
                   $review->getElementsByTagName('shelf');
 
-    next unless grep {; fc $_ eq fc $arg->{shelf} } @shelves;
+    next if $arg->{shelf} && ! grep {; fc $_ eq fc $arg->{shelf} } @shelves;
+    for my $exclude (map {; fc } @{ $arg->{not_shelves} || [] }) {
+      next REVIEW if grep {; fc $_ eq $exclude } @shelves;
+    }
 
     my ($id_node) = $review->nonBlankChildNodes;
     die "first child in a <review> node was not its id: $review\n"
@@ -70,6 +76,10 @@ sub read_pages_on_shelf {
     }
   }
 
+  my $selector = '';
+  $selector .= "on $arg->{shelf}"                if $arg->{shelf};
+  $selector .= "not on (@{$arg->{not_shelves}})" if @{$arg->{not_shelves}||[]};
+
   my %to_save;
   my $total_diff = 0;
   my @notes;
@@ -78,8 +88,8 @@ sub read_pages_on_shelf {
     my $diff   = $status->{current_page} - ($old->{$id} // 0);
     $diff = 0 if $diff < 0;
     $Logger->log([
-      "on shelf %s, book %s, was on page %s, now on page %s",
-      $arg->{shelf},
+      "%s, book %s, was on page %s, now on page %s",
+      $selector,
       $status->{title},
       $old->{$id},
       $status->{current_page},
