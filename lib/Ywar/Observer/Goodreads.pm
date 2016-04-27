@@ -179,9 +179,12 @@ sub _get_review_status {
     my ($page_node) = $latest->getElementsByTagName('page');
     my ($pct_node)  = $latest->getElementsByTagName('percent');
 
-    $page = int(($page_node->getAttribute('nil') // 'false') eq 'false'
-          ? $page_node->textContent
-          : ($page_count * ($pct_node->textContent / 100)));
+    $page = $page_node->textContent;
+    my $pct = $pct_node->textContent;
+
+    if (! $page && $pct) {
+      $page = int( $page_count * $pct / 100 );
+    }
   }
 
   if (grep {; 'read' eq $_ } @{ $status{shelves} }) {
