@@ -121,6 +121,7 @@ my %GOODREAD_OVERRIDE = (
   '1338597476' => 320,
   '1419735844' => 337, # Rust Programming Language
   '1503826885' => 275, # Eclipse Phase: After the Fall
+  '1548005321' => 400, # Stack Computers
 );
 
 sub _page_count_for_review {
