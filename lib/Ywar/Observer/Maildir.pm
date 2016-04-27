@@ -45,6 +45,10 @@ sub decreasing_unread_mail {
 
   my %result = (value => $self->stats->{unread_count});
 
+  for my $folder (@{ $arg->{ignore_folders} || [] }) {
+    $result{value} -= $self->stats->{maildir}{$folder}{unread_count} // 0;
+  }
+
   if ($result{value} < max($laststate->completion->{measured_value}, $min)) {
     $result{note} = "new count: $result{value}";
     $result{met_goal} = not_today($laststate->completion);
