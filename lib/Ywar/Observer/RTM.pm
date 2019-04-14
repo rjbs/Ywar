@@ -48,7 +48,10 @@ sub nothing_overdue {
 sub closed_old_tasks {
   my ($self, $laststate) = @_;
 
-  my $yesterday_14 = $laststate->yesterday_value->{measured_value};
+  # This is a stupid hack. -- rjbs, 2019-02-25
+  my $yesterday_14 = $laststate->yesterday_value
+                   ? $laststate->yesterday_value->{measured_value}
+                   : 0;
 
   my $old_date = DateTime->today(time_zone => Ywar::Config->time_zone)
                          ->subtract(days => 14);
