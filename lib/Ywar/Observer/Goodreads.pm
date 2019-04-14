@@ -114,6 +114,7 @@ sub read_pages_on_shelf {
 
 my %GOODREAD_OVERRIDE = (
   '874055936' => 204, # Stylized
+  '874060505' => 376, # Let Over Lambda
   '888491548' => 256,
   '938489037' => 218,
   '945306208' => 298,
@@ -122,6 +123,23 @@ my %GOODREAD_OVERRIDE = (
   '1419735844' => 337, # Rust Programming Language
   '1503826885' => 275, # Eclipse Phase: After the Fall
   '1548005321' => 400, # Stack Computers
+  '1696465884' => 294, # Thinking Forth
+  '1767846979' => 209, # Learn Vimscript the Hard Way
+  '1804267245' => 257, # Greg Egan's Luminous
+  '1816295212' => 205, # SNOBOL4
+  '1929035572' => 336, # Squirrel Girl
+  '994083838'  => 234, # Ophiuchi Hotline
+  '2069723957' => 240, # Conceptual Blockbusting
+  '2104834840' => 418, # House of God
+  '2116392500' => 208, # Annihilation
+  '2061438325' => 375, # Something Coming Through
+  '1011643170' => 240, # Doorways in the Sand
+  '2278083592' =>  94, # Electric Arches
+  '2285277797' => 619, # Atomic Accidents
+  '2355284411' => 272, # The Ways of White Folks
+  '2473918233' => 128, # Agents of Dreamland
+  '2547669908' => 128, # Code with the Wisdom of the Crowd
+  '874063815'  => 192, # Team Geek
 );
 
 sub _page_count_for_review {
