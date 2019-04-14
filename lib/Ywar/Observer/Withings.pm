@@ -34,7 +34,7 @@ sub measured_weight {
                   ->epoch;
 
   my $res = $access_token->get(
-    "http://wbsapi.withings.net/measure"
+    "https://wbsapi.withings.net/measure"
     . "?action=getmeas&startdate=$start_o_day&userid=$userid"
   );
 
