@@ -24,7 +24,7 @@ sub bookmark_list {
     ],
   );
 
-  die "error getting Instapaper bookmark list: " . $r->decoded_content
+  die "error getting Instapaper bookmark list: " . ($r->decoded_content || $r->as_string)
     unless $r->is_success;
 
   my @bookmarks = sort {; $a->{time} <=> $b->{time} }
