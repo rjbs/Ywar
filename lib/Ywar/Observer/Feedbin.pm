@@ -25,6 +25,9 @@ sub did_reading {
   my $uri = "https://api.feedbin.me/v2/entries.json"
           . "?read=false&per_page=$per_page&page=1";
 
+  my @responses;
+
+  my $error;
   my @entries;
   my $next_page = sub {
     return unless $uri;
@@ -33,8 +36,11 @@ sub did_reading {
     my $res = $ua->get($uri, 'Authorization' => "Basic $auth");
     $uri = undef;
 
+    push @responses, $res;
+
     unless ($res->is_success) {
       warn "failed to get feeds from Feedbin: " . $res->status_line . "\n";
+      $error = 1;
       return;
     }
 
@@ -58,6 +64,19 @@ sub did_reading {
       $total++;
       next if $date->epoch >= $^T - 86_400;
       $nonrecent++;
+    }
+  }
+
+  if ($error) {
+    die "got errors from Feedbin when retrieving entries\n";
+  }
+
+  if ($total == 0) {
+    open my $logfile, '>>', "/home/rjbs/log/ywar/0-items"
+      or die "can't write to 0-items: $!";
+    print { $logfile } "----> " . scalar(localtime) . "\n";
+    for my $res (@responses) {
+      print { $logfile } $res->as_string;
     }
   }
 
