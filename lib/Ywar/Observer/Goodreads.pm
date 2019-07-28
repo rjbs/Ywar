@@ -140,6 +140,7 @@ my %GOODREAD_OVERRIDE = (
   '2473918233' => 128, # Agents of Dreamland
   '2547669908' => 128, # Code with the Wisdom of the Crowd
   '874063815'  => 192, # Team Geek
+  '2813837895' => 352, # In the Sanctuary of Outcasts
 );
 
 sub _page_count_for_review {
