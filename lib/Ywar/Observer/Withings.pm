@@ -2,41 +2,26 @@ use 5.14.0;
 package Ywar::Observer::Withings;
 use Moose;
 
-use Net::OAuth::Client;
 use Ywar::Util qw(not_today);
 
-has [ qw(api_key secret token tsecret userid) ] => (is => 'ro', required => 1);
+has [ qw(bearer_token) ] => (is => 'ro', required => 1);
 
 sub measured_weight {
   my ($self, $laststate) = @_;
 
   return unless not_today($laststate->completion);
 
-  my $client = Net::OAuth::Client->new(
-    $self->api_key,
-    $self->secret,
-    site               => 'https://oauth.withings.com/',
-    request_token_path => '/account/request_token',
-    authorize_path     => '/account/authorize',
-    access_token_path  => '/account/access_token',
-    callback           => 'oob',
-  );
-
-  my $userid = $self->userid;
-
-  my $access_token = Net::OAuth::AccessToken->new(
-    client => $client,
-    token  => $self->token,
-    token_secret => $self->tsecret,
-  );
+  my $ua = LWP::UserAgent->new(keep_alive => 2);
 
   my $start_o_day = DateTime->today(time_zone => Ywar::Config->time_zone)
                   ->epoch;
 
-  my $res = $access_token->get(
-    "https://wbsapi.withings.net/measure"
-    . "?action=getmeas&startdate=$start_o_day&userid=$userid"
+  my $res = $ua->get(
+    "https://wbsapi.withings.net/measure?action=getmeas&meastype=1&category=1&startdate=$start_o_day",
+    Authorization => 'Bearer ' . $self->bearer_token,
   );
+
+  die $res->as_string unless $res->is_success;
 
   my $payload = JSON->new->decode($res->decoded_content);
   my @groups  = @{ $payload->{body}{measuregrps} };
