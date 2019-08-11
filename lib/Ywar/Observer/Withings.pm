@@ -4,7 +4,10 @@ use Moose;
 
 use Ywar::Util qw(not_today);
 
-has [ qw(bearer_token) ] => (is => 'ro', required => 1);
+has [ qw(client_id client_secret o1_token o1_tsecret) ] => (
+  is => 'ro',
+  required => 1
+);
 
 sub measured_weight {
   my ($self, $laststate) = @_;
@@ -16,9 +19,25 @@ sub measured_weight {
   my $start_o_day = DateTime->today(time_zone => Ywar::Config->time_zone)
                   ->epoch;
 
+  my $token = $ua->post(
+    "https://account.withings.com/oauth2/token",
+    {
+      grant_type => 'refresh_token',
+      client_id     => '1d4b57b225357c2248ce37c661379b48528c551f66f1003519fa5b0c32b5d6c7',
+      client_secret => '56b64adee1c932211bec85bc5cf723849a711e7b63ce7c23a9f0ee55fa7fa092',
+      refresh_token => '898fd9f1ff14dc7c77648e88c4c14e923c1725c9febf786279f58618056:d7e9f9edeee2b252f4694451b4d969c5e51d8400418f8d94c2d7237b5574',
+    }
+  );
+
+  die $token->as_string unless $token->is_success;
+
+  my $token_payload = JSON->new->decode($token->decoded_content);
+
+  my $access_token = $token_payload->{access_token};
+
   my $res = $ua->get(
     "https://wbsapi.withings.net/measure?action=getmeas&meastype=1&category=1&startdate=$start_o_day",
-    Authorization => 'Bearer ' . $self->bearer_token,
+    Authorization => 'Bearer ' . $access_token,
   );
 
   die $res->as_string unless $res->is_success;
