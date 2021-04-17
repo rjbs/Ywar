@@ -175,7 +175,7 @@ sub update_tdp {
   }
 
   my $res = LWP::UserAgent->new->post(
-    "http://tdp.me/v1/goals/$id/completion",
+    "https://tdp.me/v1/goals/$id/completion",
     Content => JSON->new->encode({
       note     => $new->{note},
       quantity => ($new->{met_goal} ? 1 : 0),
