@@ -141,6 +141,17 @@ my %GOODREAD_OVERRIDE = (
   '2547669908' => 128, # Code with the Wisdom of the Crowd
   '874063815'  => 192, # Team Geek
   '2813837895' => 352, # In the Sanctuary of Outcasts
+  '2495886895' => 372, # 7 Habits
+  '3196574404' => 369, # 7th Function of Language
+  '3499671826' => 630, # The Living Dead
+  '3580638802' => 272, # Darkness at Noon
+  '3633702469' => 176, # Introduction to Algol
+  '3649325998' => 293, # Soul of New Machine
+  '3681265146' => 418, # Dreaming in Code
+  '3699476173' => 159, # The Dirdir
+  '3795387792' => 417, # The Cuckoo's Egg
+  '3830928713' => 336, # HHhH
+  '3943129359' => 379, # The Last Day
 );
 
 sub _page_count_for_review {
