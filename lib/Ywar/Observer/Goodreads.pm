@@ -152,6 +152,8 @@ my %GOODREAD_OVERRIDE = (
   '3795387792' => 417, # The Cuckoo's Egg
   '3830928713' => 336, # HHhH
   '3943129359' => 379, # The Last Day
+  '3953025301' => 200, # FreeBSD Mastery: ZFS
+  '4045052138' => 104, # Ed Mastery
 );
 
 sub _page_count_for_review {
