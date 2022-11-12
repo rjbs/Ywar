@@ -154,6 +154,16 @@ my %GOODREAD_OVERRIDE = (
   '3943129359' => 379, # The Last Day
   '3953025301' => 200, # FreeBSD Mastery: ZFS
   '4045052138' => 104, # Ed Mastery
+  '4146782029' => 176, # Secret Ballot
+  '4398230321' => 186, # Bad Roland
+  '4410895772' => 220, # Languages of Pao
+  '4415648545' => 337, # We Sold Our Souls
+  '4713111584' => 241, # Making Work Visible (2e)
+  '4753796651' => 252, # git commit murder
+  '4807793067' => 368, # pattern recognition
+  '5047787741' => 385, # Caldé of the Long Sun
+  '5062472281' => 448, # Exodus from the Long Sun
+  '5092289050' => 124, # valuable humans in transit
 );
 
 sub _page_count_for_review {
