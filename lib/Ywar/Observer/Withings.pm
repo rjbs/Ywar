@@ -2,9 +2,11 @@ use 5.14.0;
 package Ywar::Observer::Withings;
 use Moose;
 
+use Path::Tiny;
+use Ywar::Logger '$Logger';
 use Ywar::Util qw(not_today);
 
-has [ qw(client_id client_secret refresh_token) ] => (
+has [ qw(client_id client_secret) ] => (
   is => 'ro',
   required => 1
 );
@@ -12,12 +14,13 @@ has [ qw(client_id client_secret refresh_token) ] => (
 sub measured_weight {
   my ($self, $laststate) = @_;
 
-  return unless not_today($laststate->completion);
-
   my $ua = LWP::UserAgent->new(keep_alive => 2);
 
   my $start_o_day = DateTime->today(time_zone => Ywar::Config->time_zone)
                   ->epoch;
+
+  my $refresh = path("/home/rjbs/.withings")->slurp;
+  chomp $refresh;
 
   my $token = $ua->post(
     "https://wbsapi.withings.net/v2/oauth2",
@@ -26,7 +29,7 @@ sub measured_weight {
       grant_type    => 'refresh_token',
       client_id     => $self->client_id,
       client_secret => $self->client_secret,
-      refresh_token => $self->refresh_token,
+      refresh_token => $refresh,
     }
   );
 
@@ -34,7 +37,16 @@ sub measured_weight {
 
   my $token_payload = JSON->new->decode($token->decoded_content);
 
+  $Logger->log([ "Withings oauth2 response: %s", $token_payload ]);
+
   my $access_token = $token_payload->{body}{access_token};
+
+  my $new_refresh = $token_payload->{body}{refresh_token};
+  if ($new_refresh && $new_refresh ne $refresh) {
+    path("/home/rjbs/.withings")->spew("$new_refresh\n");
+  }
+
+  return unless not_today($laststate->completion);
 
   my $res = $ua->get(
     "https://wbsapi.withings.net/measure?action=getmeas&meastype=1&category=1&startdate=$start_o_day",
