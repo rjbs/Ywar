@@ -33,8 +33,12 @@ sub closed_issues {
 
   my @issues;
   while ( my $issue = $repos->next ) {
-    warn("couldn't determine repository owner for issue"), return
-      unless defined $issue->{repository}{owner}{id};
+    unless (defined $issue->{repository}{owner}{id}) {
+      warn("couldn't determine repository owner for issue");
+      use Data::Dumper;
+      warn Dumper($issue);
+      return;
+    }
 
     next unless $issue->{repository}{owner}{id} == $self->userid;
 
