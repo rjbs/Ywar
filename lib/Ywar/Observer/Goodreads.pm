@@ -164,6 +164,7 @@ my %GOODREAD_OVERRIDE = (
   '5047787741' => 385, # Caldé of the Long Sun
   '5062472281' => 448, # Exodus from the Long Sun
   '5092289050' => 124, # valuable humans in transit
+  '5094157211' => 273, # Boys from Brazil, The
 );
 
 sub _page_count_for_review {
