@@ -1,3 +1,12 @@
+#!perl
 use strict;
 use Ywar::App;
+
+use Ywar::Logger '$Logger' => { init => {
+  facility  => undef,
+  ident     => 'ywar',
+  to_stdout => 1,
+  log_pid   => 0,
+} };
+
 Ywar::App->run;

@@ -88,7 +88,7 @@ sub read_pages_on_shelf {
     my $status = $current{$id};
     my $diff   = $status->{current_page} - ($old->{$id} // 0);
     $diff = 0 if $diff < 0;
-    $Logger->log([
+    $Logger->log_debug([
       "%s, book %s, was on page %s, now on page %s",
       $selector,
       $status->{title},
@@ -101,7 +101,7 @@ sub read_pages_on_shelf {
       if grep { fc $_ eq 'currently-reading' } @{ $status->{shelves} };
   }
 
-  $Logger->log([
+  $Logger->log_debug([
     "on shelf %s, need %s pages read, have %s",
     $arg->{shelf}, $arg->{goal_pages}, $total_diff,
   ]);

@@ -10,14 +10,16 @@ use DBI;
 use Getopt::Long::Descriptive;
 use JSON ();
 use LWP::UserAgent;
+use Time::HiRes ();
 use Try::Tiny;
 
 use Ywar::Config;
+use Ywar::Logger '$Logger';
 use Ywar::LastState;
 
 sub opt_spec {
   return (
-    [ 'debug|d'   => 'debugging output' ],
+    [ 'verbose|v' => 'verbose output' ],
     [ 'dry-run|n' => 'dry run!' ],
   );
 }
@@ -99,13 +101,8 @@ sub _push_notif {
   }
 }
 
-our $OPT;
-
-use String::Flogger 'flog';
-sub debug { return unless $OPT->debug; STDERR->say(flog($_)) for @_ }
-
 sub _do_check {
-  my ($self, $id, $name, $obs, $check, $extra) = @_;
+  my ($self, $opt, $id, $name, $obs, $check, $extra) = @_;
 
   my $laststate = last_state_for($name);
 
@@ -115,30 +112,41 @@ sub _do_check {
 
   my $new;
 
+  my $start = Time::HiRes::time();
+
   try {
     $new = $obs->$check($laststate, $extra // {});
   } catch {
     warn "error while checking $name: $_";
   };
 
-  debug("$name = no measurement"), return unless $new;
-  debug([
-    "$name = (M: %s / C: %s) -> %s",
+  my $end = Time::HiRes::time();
+
+  $Logger->log_debug([ 'checking %s: took %0.4fs', $check, $end - $start ]);
+
+  unless ($new) {
+    $Logger->log_debug("$name: no measurement");
+    return;
+  }
+
+  $Logger->log_debug([
+    "$name: (M: %s / C: %s) -> %s",
     $laststate->measurement->{measured_value},
     $laststate->completion->{measured_value},
     $new,
   ]);
 
-  # debug("$name = too recent; not saving"), return unless dayold($done);
-
-  update_tdp($id, $new) if $new->{met_goal};
+  $self->update_tdp($opt, $id, $new) if $new->{met_goal};
   $self->_push_notif("completed goal: $name") if $new->{met_goal};
-  save_measurement("$name", $new);
+  $self->save_measurement($opt, "$name", $new);
 }
 
 sub execute {
   my ($self, $opt, $args) = @_;
-  local $OPT = $opt; # XXX <- temporary hack
+
+  if ($opt->verbose) {
+    $Logger->set_debug(1);
+  }
 
   my %to_check = map {; $_ => 1 } @$args;
 
@@ -146,6 +154,10 @@ sub execute {
   # before doing anything stupid -- rjbs, 2013-11-02
   my $observers = Ywar::Config->config->{observers};
   for my $plugin_name (sort keys %$observers) {
+    local $Logger = $Logger->proxy({
+      proxy_prefix => "[$plugin_name] ",
+    });
+
     my $hunk    = $observers->{ $plugin_name };
     my $moniker = $hunk->{class} // $plugin_name; # do RewritePrefix
     my $config  = $hunk->{config};
@@ -159,8 +171,11 @@ sub execute {
       my $check = $hunk->{checks}{$check_name};
 
       $self->_do_check(
-        $check->{'tdp-id'}, $check_name,
-        $obs, $check->{method},
+        $opt,
+        $check->{'tdp-id'},
+        $check_name,
+        $obs,
+        $check->{method},
         $check->{args},
       );
     }
@@ -168,9 +183,10 @@ sub execute {
 }
 
 sub update_tdp {
-  my ($id, $new) = @_;
-  if ($OPT->dry_run) {
-    warn "dry run: not completing goal $id ($new->{note})\n";
+  my ($self, $opt, $id, $new) = @_;
+
+  if ($opt->dry_run) {
+    $Logger->log_debug("dry run: not completing goal $id ($new->{note})");
     return;
   }
 
@@ -188,9 +204,10 @@ sub update_tdp {
 }
 
 sub save_measurement {
-  my ($thing, $new) = @_;
-  if ($OPT->dry_run) {
-    warn "dry run: not really setting $thing to $new->{value}\n";
+  my ($self, $opt, $thing, $new) = @_;
+
+  if ($opt->dry_run) {
+    $Logger->log_debug("dry run: not really setting $thing to $new->{value}");
     return;
   }
 

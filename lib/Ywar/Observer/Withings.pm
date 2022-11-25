@@ -37,7 +37,7 @@ sub measured_weight {
 
   my $token_payload = JSON->new->decode($token->decoded_content);
 
-  $Logger->log([ "Withings oauth2 response: %s", $token_payload ]);
+  $Logger->log_debug([ "Withings oauth2 response: %s", $token_payload ]);
 
   my $access_token = $token_payload->{body}{access_token};
 

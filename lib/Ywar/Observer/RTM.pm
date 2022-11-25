@@ -90,7 +90,7 @@ sub closed_old_tasks {
     $result{met_goal} = not_today($laststate->completion);
   }
 
-  $Logger->log("RTM tasks: yesterday's count: $yesterday_14; closed: $closed; today: $today_14");
+  $Logger->log_debug("RTM tasks: yesterday's count: $yesterday_14; closed: $closed; today: $today_14");
 
   return \%result;
 }

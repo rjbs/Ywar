@@ -17,6 +17,7 @@ sub default_logger_args {
   return {
     ident     => "Ywar",
     facility  => undef,
+    log_pid   => 0,
     # to_stderr => $_[0]->default_logger_class->env_value('STDERR') ? 1 : 0,
 
     ( Ywar::Config->config->{log_dir}

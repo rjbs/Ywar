@@ -32,7 +32,7 @@ sub did_reading {
   my $next_page = sub {
     return unless $uri;
 
-    $Logger->log([ "fetching $uri" ]);
+    $Logger->log_debug([ "fetching $uri" ]);
     my $res = $ua->get($uri, 'Authorization' => "Basic $auth");
     $uri = undef;
 
@@ -80,7 +80,7 @@ sub did_reading {
     }
   }
 
-  $Logger->log([ "Feedbin items: %s total, %s nonrecent", $total, $nonrecent ]);
+  $Logger->log_debug([ "Feedbin items: %s total, %s nonrecent", $total, $nonrecent ]);
 
   return {
     # We only get enough pages to answer the question atm, so we do not have
