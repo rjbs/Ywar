@@ -6,6 +6,7 @@ use JSON 2 ();
 use LWP::UserAgent;
 use List::AllUtils 'uniq';
 use XML::LibXML;
+use YAML::XS ();
 use Ywar::Logger '$Logger';
 
 has api_key => (
@@ -112,66 +113,23 @@ sub read_pages_on_shelf {
   };
 }
 
-my %GOODREAD_OVERRIDE = (
-  '874055936' => 204, # Stylized
-  '874060505' => 376, # Let Over Lambda
-  '888491548' => 256,
-  '938489037' => 218,
-  '945306208' => 298,
-  '1080170105' => 225,
-  '1338597476' => 320,
-  '1419735844' => 337, # Rust Programming Language
-  '1503826885' => 275, # Eclipse Phase: After the Fall
-  '1548005321' => 400, # Stack Computers
-  '1696465884' => 294, # Thinking Forth
-  '1767846979' => 209, # Learn Vimscript the Hard Way
-  '1804267245' => 257, # Greg Egan's Luminous
-  '1816295212' => 205, # SNOBOL4
-  '1929035572' => 336, # Squirrel Girl
-  '994083838'  => 234, # Ophiuchi Hotline
-  '2069723957' => 240, # Conceptual Blockbusting
-  '2104834840' => 418, # House of God
-  '2116392500' => 208, # Annihilation
-  '2061438325' => 375, # Something Coming Through
-  '1011643170' => 240, # Doorways in the Sand
-  '2278083592' =>  94, # Electric Arches
-  '2285277797' => 619, # Atomic Accidents
-  '2355284411' => 272, # The Ways of White Folks
-  '2473918233' => 128, # Agents of Dreamland
-  '2547669908' => 128, # Code with the Wisdom of the Crowd
-  '874063815'  => 192, # Team Geek
-  '2813837895' => 352, # In the Sanctuary of Outcasts
-  '2495886895' => 372, # 7 Habits
-  '3196574404' => 369, # 7th Function of Language
-  '3499671826' => 630, # The Living Dead
-  '3580638802' => 272, # Darkness at Noon
-  '3633702469' => 176, # Introduction to Algol
-  '3649325998' => 293, # Soul of New Machine
-  '3681265146' => 418, # Dreaming in Code
-  '3699476173' => 159, # The Dirdir
-  '3795387792' => 417, # The Cuckoo's Egg
-  '3830928713' => 336, # HHhH
-  '3943129359' => 379, # The Last Day
-  '3953025301' => 200, # FreeBSD Mastery: ZFS
-  '4045052138' => 104, # Ed Mastery
-  '4146782029' => 176, # Secret Ballot
-  '4398230321' => 186, # Bad Roland
-  '4410895772' => 220, # Languages of Pao
-  '4415648545' => 337, # We Sold Our Souls
-  '4713111584' => 241, # Making Work Visible (2e)
-  '4753796651' => 252, # git commit murder
-  '4807793067' => 368, # pattern recognition
-  '5047787741' => 385, # Caldé of the Long Sun
-  '5062472281' => 448, # Exodus from the Long Sun
-  '5092289050' => 124, # valuable humans in transit
-  '5094157211' => 273, # Boys from Brazil, The
+has special_page_counts => (
+  is    => 'ro',
+  isa   => 'HashRef',
+  lazy  => 1,
+  default => sub {
+    my $fn = "$ENV{HOME}/.goodreads";
+    return {} unless -e $fn;
+    YAML::XS::LoadFile($fn);
+  }
 );
 
 sub _page_count_for_review {
   my ($self, $doc, $review_id, $title) = @_;
 
-  return $GOODREAD_OVERRIDE{ $review_id }
-    if exists $GOODREAD_OVERRIDE{ $review_id };
+  my $override = $self->special_page_counts->{ $review_id };
+
+  return $override if $override;
 
   my ($total_page_node) = $doc->getElementsByTagName('num_pages');
   return unless $total_page_node;
@@ -240,6 +198,7 @@ sub _get_review_status {
   return \%status;
 }
 
+1;
 __END__
 
   Goodreads:
