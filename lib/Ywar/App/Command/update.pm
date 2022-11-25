@@ -168,7 +168,7 @@ sub execute {
     my $class = "Ywar::Observer::$moniker";
     my $obs   = do { load_class($class); $class->new($config // {}); };
 
-    for my $check_name (keys %{$hunk->{checks}}) {
+    for my $check_name (sort keys %{$hunk->{checks}}) {
       local $Logger = $Logger->proxy({
         proxy_prefix => "$check_name | ",
       });
