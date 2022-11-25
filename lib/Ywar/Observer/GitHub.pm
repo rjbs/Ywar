@@ -2,6 +2,7 @@ use 5.14.0;
 package Ywar::Observer::GitHub;
 use Moose;
 
+use DateTime;
 use Pithub;
 use Ywar::Util qw(not_today);
 
@@ -26,13 +27,21 @@ has token  => (is => 'ro', required => 1);
 sub closed_issues {
   my ($self, $laststate) = @_;
 
-  my $repos = $self->pithub->issues->list(params => { filter => 'all' });
+  my $since = DateTime->from_epoch(epoch => $laststate->completion->{measured_at})
+                      ->truncate(to => 'day')
+                      ->add(days => 1)
+                      ->iso8601;
 
-  my $owned_14 = 0;
-  my $owned_15 = 0;
+  my $repos = $self->pithub->issues->list(params => {
+    filter => 'all',
+    state  => 'closed',
+    sort   => 'updated',
+    direction => 'desc',
+  });
 
-  my @issues;
-  while ( my $issue = $repos->next ) {
+  my @closed;
+
+  ISSUE: while (my $issue = $repos->next) {
     unless (defined $issue->{repository}{owner}{id}) {
       warn("couldn't determine repository owner for issue");
       use Data::Dumper;
@@ -42,23 +51,23 @@ sub closed_issues {
 
     next unless $issue->{repository}{owner}{id} == $self->userid;
 
-    my $date = DateTime::Format::ISO8601->parse_datetime($issue->{created_at})
-                                        ->epoch;
+    if ( $issue->{closed_at} eq $issue->{updated_at}
+      && $issue->{closed_at} lt $since
+    ) {
+      last ISSUE;
+    }
 
-    my $diff = $^T - $date;
-
-    next if $diff < 14 * 86_400;
-    $owned_14++;
-
-    next if $diff < 15 * 86_400;
-    $owned_15++;
+    my @bits = split m{/}, $issue->{repository_url};
+    my $id   = join q{!}, "$bits[-2]/$bits[-1]", $issue->{number};
+    push @closed, $id;
   }
 
-  my %result = (value => $owned_14);
+  @closed = sort @closed;
 
-  my $closed = $laststate->yesterday_value->{measured_value} - $owned_15;
-  if ($closed > 0) {
-    $result{note} = "closed: $closed";
+  my %result = (value => 0+@closed);
+
+  if (@closed > 0) {
+    $result{note} = "closed: @closed";
     $result{met_goal} = not_today($laststate->completion);
   }
 
