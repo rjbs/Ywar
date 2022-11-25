@@ -32,6 +32,11 @@ sub closed_issues {
                       ->add(days => 1)
                       ->iso8601;
 
+  my $recent = DateTime->now
+                       ->truncate(to => 'day')
+                       ->subtract(days => 14)
+                       ->iso8601;
+
   my $repos = $self->pithub->issues->list(params => {
     filter => 'all',
     state  => 'closed',
@@ -55,6 +60,13 @@ sub closed_issues {
       && $issue->{closed_at} lt $since
     ) {
       last ISSUE;
+    }
+
+    # If the issue was created recently, we don't count closing it as much of
+    # an achievement.  Maybe this is still, but it's the deal.
+    if ($issue->{created_at} gt $recent) {
+      warn "skipping issue, $issue->{created_at} too recent\n";
+      next;
     }
 
     my @bits = split m{/}, $issue->{repository_url};
