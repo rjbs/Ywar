@@ -97,8 +97,10 @@ sub read_pages_on_shelf {
     ]);
     $total_diff += $diff;
     push @notes, "read $diff pages in $status->{title}" if $diff;
-    $to_save{$id} = $status->{current_page}
-      if grep { fc $_ eq 'currently-reading' } @{ $status->{shelves} };
+
+    if (grep { fc $_ eq 'currently-reading' } @{ $status->{shelves} }) {
+      $to_save{$id} = $status->{current_page} + 0; # force number in JSON
+    }
   }
 
   $Logger->log_debug([
