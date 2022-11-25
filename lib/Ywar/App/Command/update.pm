@@ -97,8 +97,10 @@ sub _push_notif {
   );
 
   unless ($res->is_success) {
-    warn "error with push notification: " . $res->as_string;
+    $Logger->log("error with push notification: " . $res->as_string);
   }
+
+  return;
 }
 
 sub _do_check {
@@ -106,9 +108,10 @@ sub _do_check {
 
   my $laststate = last_state_for($name);
 
-  warn("no existing measurements for $name\n"), return
-    unless $laststate->has_measurement
-    and    $laststate->has_completion;
+  unless ($laststate->has_measurement and $laststate->has_completion) {
+    $Logger->log("no existing measurements");
+    return;
+  }
 
   my $new;
 
@@ -117,20 +120,20 @@ sub _do_check {
   try {
     $new = $obs->$check($laststate, $extra // {});
   } catch {
-    warn "error while checking $name: $_";
+    $Logger->log("error while checking: $_");
   };
 
   my $end = Time::HiRes::time();
 
-  $Logger->log_debug([ 'checking %s: took %0.4fs', $check, $end - $start ]);
+  $Logger->log_debug([ 'took %0.4fs', $end - $start ]);
 
   unless ($new) {
-    $Logger->log_debug("$name: no measurement");
+    $Logger->log_debug("no measurement");
     return;
   }
 
   $Logger->log_debug([
-    "$name: (M: %s / C: %s) -> %s",
+    "(M: %s / C: %s) -> %s",
     $laststate->measurement->{measured_value},
     $laststate->completion->{measured_value},
     $new,
@@ -166,6 +169,10 @@ sub execute {
     my $obs   = do { load_class($class); $class->new($config // {}); };
 
     for my $check_name (keys %{$hunk->{checks}}) {
+      local $Logger = $Logger->proxy({
+        proxy_prefix => "$check_name | ",
+      });
+
       next if keys %to_check && ! $to_check{$check_name};
 
       my $check = $hunk->{checks}{$check_name};
@@ -200,14 +207,18 @@ sub update_tdp {
     'X-Access-Token' => Ywar::Config->config->{TDP}{token},
   );
 
-  warn "error updating goal $id: " . $res->as_string unless $res->is_success;
+  unless ($res->is_success) {
+    $Logger->log("error updating goal $id: " . $res->as_string);
+  }
+
+  return;
 }
 
 sub save_measurement {
   my ($self, $opt, $thing, $new) = @_;
 
   if ($opt->dry_run) {
-    $Logger->log_debug("dry run: not really setting $thing to $new->{value}");
+    $Logger->log_debug("dry run: not really setting to $new->{value}");
     return;
   }
 
