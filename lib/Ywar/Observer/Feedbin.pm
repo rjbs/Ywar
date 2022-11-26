@@ -3,7 +3,7 @@ package Ywar::Observer::Feedbin;
 use Moose;
 
 use DateTime::Format::ISO8601;
-use JSON 2;
+use JSON::XS;
 use LWP::UserAgent;
 use Ywar::Logger '$Logger';
 use Ywar::Util qw(not_today);
@@ -16,7 +16,7 @@ sub did_reading {
   # Recorded is the number of items that were one days old yesterday.
   # The goal is to have nothing unread over 24 hours old.
   my $ua   = LWP::UserAgent->new(keep_alive => 1);
-  my $JSON = JSON->new;
+  my $JSON = JSON::XS->new;
 
   my $auth = $self->auth;
 

@@ -2,7 +2,7 @@ use 5.16.0;
 package Ywar::Observer::Goodreads;
 use Moose;
 
-use JSON 2 ();
+use JSON::XS ();
 use LWP::UserAgent;
 use List::AllUtils 'uniq';
 use XML::LibXML;
@@ -26,7 +26,7 @@ has lwp => (
 
 my $BASE = 'https://www.goodreads.com';
 
-my $JSON = JSON->new->canonical;
+my $JSON = JSON::XS->new->canonical;
 
 sub read_pages_on_shelf {
   my ($self, $laststate, $arg) = @_;

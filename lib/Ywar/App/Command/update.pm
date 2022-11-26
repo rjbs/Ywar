@@ -8,7 +8,7 @@ use Class::Load qw(load_class);
 use DateTime;
 use DBI;
 use Getopt::Long::Descriptive;
-use JSON ();
+use JSON::XS ();
 use LWP::UserAgent;
 use Time::HiRes ();
 use Try::Tiny;
@@ -199,7 +199,7 @@ sub update_tdp {
 
   my $res = LWP::UserAgent->new->post(
     "https://tdp.me/v1/goals/$id/completion",
-    Content => JSON->new->encode({
+    Content => JSON::XS->new->encode({
       note     => $new->{note},
       quantity => ($new->{met_goal} ? 1 : 0),
     }),

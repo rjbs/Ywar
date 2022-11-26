@@ -3,7 +3,7 @@ package Ywar::Observer::RunKeeper;
 use Moose;
 
 use DateTime::Format::HTTP;
-use JSON;
+use JSON::XS;
 use LWP::UserAgent;
 use Time::Duration;
 use Ywar::Util qw(not_today);
@@ -15,7 +15,7 @@ sub worked_out {
 
   # Recorded is the epoch sec. of the last activity.
   my $ua   = LWP::UserAgent->new(keep_alive => 1);
-  my $JSON = JSON->new;
+  my $JSON = JSON::XS->new;
 
   my $token = $self->token;
 

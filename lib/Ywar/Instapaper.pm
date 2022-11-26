@@ -2,7 +2,7 @@ use 5.16.0;
 use warnings;
 package Ywar::Instapaper;
 
-use JSON;
+use JSON::XS;
 use LWP::Authen::OAuth;
 
 sub bookmark_list {
@@ -29,7 +29,7 @@ sub bookmark_list {
 
   my @bookmarks = sort {; $a->{time} <=> $b->{time} }
                   grep {; $_->{type} eq 'bookmark' }
-                  @{ JSON->new->decode($r->decoded_content) };
+                  JSON::XS->new->decode($r->decoded_content)->@*;
 
   return @bookmarks;
 }

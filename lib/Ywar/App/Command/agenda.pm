@@ -12,7 +12,7 @@ use Email::MIME;
 use Email::Sender::Simple qw(sendmail);
 use Getopt::Long::Descriptive;
 use HTML::Entities;
-use JSON::MaybeXS ();
+use JSON::XS ();
 use Lingua::EN::Inflect qw(PL_N);
 use LWP::UserAgent;
 use POSIX qw(ceil);
@@ -82,7 +82,7 @@ sub execute {
     );
 
     my $json = $res->decoded_content;
-    my $data = JSON::MaybeXS->new->decode($json);
+    my $data = JSON::XS->new->decode($json);
 
     my @dead;
     my @confused;

@@ -2,6 +2,7 @@ use 5.14.0;
 package Ywar::Observer::Withings;
 use Moose;
 
+use JSON::XS;
 use Path::Tiny;
 use Ywar::Logger '$Logger';
 use Ywar::Util qw(not_today);
@@ -35,7 +36,7 @@ sub measured_weight {
 
   die $token->as_string unless $token->is_success;
 
-  my $token_payload = JSON->new->decode($token->decoded_content);
+  my $token_payload = JSON::XS->new->decode($token->decoded_content);
 
   $Logger->log_debug([ "Withings oauth2 response: %s", $token_payload ]);
 
@@ -55,7 +56,7 @@ sub measured_weight {
 
   die $res->as_string unless $res->is_success;
 
-  my $payload = JSON->new->decode($res->decoded_content);
+  my $payload = JSON::XS->new->decode($res->decoded_content);
   my @groups  = @{ $payload->{body}{measuregrps} };
 
   return unless @groups;
