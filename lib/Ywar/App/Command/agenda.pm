@@ -45,43 +45,9 @@ sub execute {
   my %for_date;
 
   {
-    # GET RTM TASKS TO NAG ABOUT FOR TODAY
-    my $res = $self->_rtm_ua->tasks_getList(
-      'filter=status:incomplete AND tag:nag'
-    );
-
-    unless ($res) {
-      die "RTM API error: " . $self->_rtm_ua->error;
-    }
-
-    my @series = @{ $res->{tasks}[0]{list} || [] };
-    my @tasks  = map {; @{ $_->{taskseries} } } @series;
-
-    my @to_nag;
-
-    TASK: for my $task (sort { $a->{created} cmp $a->{created} } @tasks) {
-      my ($last_note) = sort { $b->{created} cmp $a->{created} }
-                        @{ $task->{notes}[0]{note} };
-
-      if ($last_note) {
-        my $time = str2time($last_note->{created});
-        next TASK if $^T - $time < 14 * 86_400;
-      }
-
-      push @{ $for_date{ $today->ymd } }, {
-        name => $task->{name}
-             .  " (last note: "
-             .  ($last_note ? $last_note->{created} : '-')
-             .  ")",
-      };
-    }
-  }
-
-  {
     # GET RTM TASKS THAT HAVE DUE DATES
     my $rtm_res = $self->_rtm_ua->tasks_getList(
-      'filter=status:incomplete AND NOT tag:nag '
-      . 'AND (dueBefore:today OR dueWithin:"1 month")'
+      'filter=status:incomplete AND (dueBefore:today OR dueWithin:"1 month")'
     );
 
     unless ($rtm_res) {
