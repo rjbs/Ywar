@@ -40,16 +40,51 @@ sub _rtm_ua {
 
 my $CSS = <<'END';
 <style>
-div.header {
+div.day {
   border: 1px black solid;
   padding: 0.25em 1em;
-  background-color: #ffd;
   border-radius: 10px;
+  margin-bottom: 1em;
+}
+
+div.day.today {
+  background-color: #ffd;
+}
+
+div.day.tomorrow {
+  background-color: #ffebac;
+}
+
+div.day.thisweek {
+  background-color: #fed;
+}
+
+div.day.future {
+  background-color: #efdad2;
+}
+
+div.day li {
+  list-style-type: "\2192\A0";
+}
+
+h1 {
+  margin: 0 0 0.25em 0;
   text-align: center;
 }
 
-h2, h3 {
+div.day h2 {
+  margin-top: 0.25em;
   border-bottom: thin black solid;
+}
+
+div.day.perfect {
+  background-color: #aea;
+}
+
+div.day.perfect h2 {
+  text-align: center;
+  border-bottom: none;
+  margin-bottom: 0.25em;
 }
 </style>
 END
@@ -144,19 +179,30 @@ sub execute {
     }
   }
 
-  my $body = q{};
+  my $body = qq{<h1>Agenda</h1>\n};
+
+  unless ($for_date{ $today->ymd }) {
+    $body .= <<~"END"
+    <div class='day today perfect'>
+      <h2>Today: all clear!</h2>
+    </div>
+    END
+  }
+
   for my $date (sort keys %for_date) {
     my $dt   = dt($date);
     my $days = ceil($dt->subtract_datetime_absolute($today)->seconds / 86400);
 
     if ($days == 0) {
-      $body .= sprintf "<h2>Today!</h2>\n";
+      $body .= sprintf "<div class='day today'>\n<h2>Today!</h2>\n";
+    } elsif ($days == 1) {
+      $body .= sprintf "<div class='day tomorrow'>\n<h2>Tomorrow!</h2>\n";
     } elsif ($days < 6) {
-      $body .= sprintf "<h3>%s (%s)</h3>\n",
+      $body .= sprintf "<div class='day thisweek'>\n<h2>%s (%s)</h2>\n",
         $dt->format_cldr('cccc'),
         $dt->format_cldr('MMM d');
     } else {
-      $body .= sprintf "<h3>In %s days, %s</h3>\n",
+      $body .= sprintf "<div class='day future'><h2>In %s days, %s</h3>\n",
         $days > 12 ? $days : NUMWORDS($days),
         $dt->format_cldr('MMM d');
     }
@@ -179,10 +225,9 @@ sub execute {
         warn sprintf "WEIRD: %s = %s\n", $key, $item->{$key};
       }
     }
-  }
 
-  my $prelude = sprintf '<div class="header">%s</div>',
-    $today->format_cldr('cccc, MMMM dd, YYYY');
+    $body .= "\n</div>\n";
+  }
 
   my $email = Email::MIME->create(
     header_str => [
@@ -195,7 +240,7 @@ sub execute {
       encoding     => 'quoted-printable',
       charset      => 'utf-8',
     },
-    body_str   => "$CSS\n$prelude\n$body\n",
+    body_str   => "$CSS\n$body\n",
   );
 
   # print $email->as_string;
