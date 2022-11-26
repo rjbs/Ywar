@@ -231,7 +231,7 @@ sub execute {
 
   my $email = Email::MIME->create(
     header_str => [
-      Subject => "Ywar: daily agenda for " . $today->ymd,
+      Subject => "Ywar: daily agenda for " . $today->format_cldr('cccc, MMMM d'),
       From    => Ywar::Config->config->{agenda}{hdr_from},
       To      => Ywar::Config->config->{agenda}{hdr_to},
     ],
