@@ -1,6 +1,7 @@
-use 5.16.0;
+use 5.34.0;
 use warnings;
 use utf8;
+
 package Ywar::App::Command::agenda;
 use Ywar::App -command;
 
@@ -10,7 +11,8 @@ use DateTimeX::Easy;
 use Email::MIME;
 use Email::Sender::Simple qw(sendmail);
 use Getopt::Long::Descriptive;
-use JSON ();
+use HTML::Entities;
+use JSON::MaybeXS ();
 use Lingua::EN::Inflect qw(PL_N);
 use LWP::UserAgent;
 use POSIX qw(ceil);
@@ -114,7 +116,7 @@ sub execute {
     );
 
     my $json = $res->decoded_content;
-    my $data = JSON->new->decode($json);
+    my $data = JSON::MaybeXS->new->decode($json);
 
     my @dead;
     my @confused;
@@ -167,30 +169,28 @@ sub execute {
       / 86400
     );
 
-    my $spacer = $days ? '━' : '═';
-    my $when   = $days ? "$days " . PL_N(day => $days) : 'TODAY';
-    my $header = sprintf "\n%s %s - %s ", $spacer x 3, $date, $when;
-    $header .= $spacer x (72 - length $header) . "\n\n";
-    $body .= $header;
+    my $header = $days ? '<h3>%s (%s)</h3>' : '<h2>%s (%s)</h2>';
+    my $when   = $days ? "in $days " . PL_N(day => $days) : 'today';
+
+    $body .= sprintf $header, $date, $when;
+    $body .= "\n";
 
     for my $item (
       sort { ($b->{overdue} // 0) <=> ($a->{overdue} // 0)
           ||  fc $a->{name}       cmp  fc $b->{name} }
       @{ $for_date{$date} }
     ) {
-      $body .= sprintf "• %s", delete $item->{name};
+      my $text = encode_entities(delete $item->{name});
       if (my $streak = delete $item->{streak}) {
-        $body .= " (streak: $streak)";
+        $text .= " (streak: $streak)";
       }
       if (my $days_overdue = delete $item->{overdue}) {
-        $body .= " (overdue by $days_overdue " . PL_N(day => $days_overdue) . ")";
+        $text .= " (overdue by $days_overdue " . PL_N(day => $days_overdue) . ")";
       }
-      $body .= "\n";
+      $body .= "<li>$text</li>\n";
 
-      if (keys %$item) {
-        for my $key (sort keys %$item) {
-          $body .= sprintf "\xA0\xA0%-6s: %s\n", $key, $item->{$key};
-        }
+      for my $key (sort keys %$item) {
+        warn sprintf "WEIRD: %s = %s\n", $key, $item->{$key};
       }
     }
   }
@@ -202,13 +202,12 @@ sub execute {
       To      => Ywar::Config->config->{agenda}{hdr_to},
     ],
     attributes => {
-      content_type => 'text/plain',
+      content_type => 'text/html',
       encoding     => 'quoted-printable',
       charset      => 'utf-8',
     },
-    body_str   => "You've got stuff to do.  Get to it:\n$body\n"
-               . "-- \n"
-               . "Ywar\n",
+    body_str   => "<p><strong>You've got stuff to do.  Get to it!</strong></p>"
+               . "\n$body\n"
   );
 
   # print $email->as_string;
