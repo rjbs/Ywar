@@ -13,7 +13,7 @@ use Email::Sender::Simple qw(sendmail);
 use Getopt::Long::Descriptive;
 use HTML::Entities;
 use JSON::XS ();
-use Lingua::EN::Inflect qw(PL_N);
+use Lingua::EN::Inflect qw(NUMWORDS PL_N);
 use LWP::UserAgent;
 use POSIX qw(ceil);
 use WebService::RTMAgent;
@@ -37,6 +37,22 @@ sub _rtm_ua {
     $rtm_ua;
   }
 }
+
+my $CSS = <<'END';
+<style>
+div.header {
+  border: 1px black solid;
+  padding: 0.25em 1em;
+  background-color: #ffd;
+  border-radius: 10px;
+  text-align: center;
+}
+
+h2, h3 {
+  border-bottom: thin black solid;
+}
+</style>
+END
 
 sub execute {
   my ($self, $opt, $args) = @_;
@@ -128,18 +144,22 @@ sub execute {
     }
   }
 
-  my $body = '';
+  my $body = q{};
   for my $date (sort keys %for_date) {
-    my $days = ceil(
-      dt($date)->subtract_datetime_absolute($today)->seconds
-      / 86400
-    );
+    my $dt   = dt($date);
+    my $days = ceil($dt->subtract_datetime_absolute($today)->seconds / 86400);
 
-    my $header = $days ? '<h3>%s (%s)</h3>' : '<h2>%s (%s)</h2>';
-    my $when   = $days ? "in $days " . PL_N(day => $days) : 'today';
-
-    $body .= sprintf $header, $date, $when;
-    $body .= "\n";
+    if ($days == 0) {
+      $body .= sprintf "<h2>Today!</h2>\n";
+    } elsif ($days < 6) {
+      $body .= sprintf "<h3>%s (%s)</h3>\n",
+        $dt->format_cldr('cccc'),
+        $dt->format_cldr('MMM d');
+    } else {
+      $body .= sprintf "<h3>In %s days, %s</h3>\n",
+        $days > 12 ? $days : NUMWORDS($days),
+        $dt->format_cldr('MMM d');
+    }
 
     for my $item (
       sort { ($b->{overdue} // 0) <=> ($a->{overdue} // 0)
@@ -161,6 +181,9 @@ sub execute {
     }
   }
 
+  my $prelude = sprintf '<div class="header">%s</div>',
+    $today->format_cldr('cccc, MMMM dd, YYYY');
+
   my $email = Email::MIME->create(
     header_str => [
       Subject => "Ywar: daily agenda for " . $today->ymd,
@@ -172,8 +195,7 @@ sub execute {
       encoding     => 'quoted-printable',
       charset      => 'utf-8',
     },
-    body_str   => "<p><strong>You've got stuff to do.  Get to it!</strong></p>"
-               . "\n$body\n"
+    body_str   => "$CSS\n$prelude\n$body\n",
   );
 
   # print $email->as_string;
