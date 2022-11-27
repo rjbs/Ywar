@@ -114,7 +114,8 @@ sub execute {
       my $due_ymd = $due->ymd;
 
       my $overdue = $today > $due;
-      my $overdue_by = $today->delta_days($due)->days;
+      my $overdue_by = $today->delta_days($due)->in_units('days');
+
       push @{ $for_date{ ($overdue ? $today : $due)->ymd } }, {
         name => $task->{name},
         ($overdue ? (overdue => $overdue_by) : ()),
