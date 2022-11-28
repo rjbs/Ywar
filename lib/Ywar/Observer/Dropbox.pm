@@ -6,7 +6,7 @@ use WebService::Dropbox;
 use Ywar::Logger '$Logger';
 use Ywar::Util qw(not_today);
 
-has [ qw( api_key api_secret token ) ] => (
+has [ qw( api_key api_secret refresh_token ) ] => (
   is  => 'ro',
   isa => 'Str',
   required => 1,
@@ -23,7 +23,7 @@ has dropbox => (
       secret  => $self->api_secret,
     });
 
-    $dropbox->access_token($self->token);
+    $dropbox->refresh_access_token($self->refresh_token);
 
     return $dropbox;
   },
